@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-editorial: #F5F2EB;
+    --bg-surface: #FCFBF8;
+    --bg-muted: #EDE9DF;
+    --bg-accent: #DDD8CE;
+    --text-primary: #141210;
+    --text-secondary: #4A453E;
+    --border-ink: rgba(20, 18, 16, 0.18);
+  }
+
+  body {
+    background-color: #F5F2EB;
+    color: #141210;
+    font-family: 'Tiro Bangla', 'Noto Serif Bengali', 'Newsreader', serif;
+    background-image: radial-gradient(rgba(20, 18, 16, 0.03) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+}
+
+/* Primary Literary and Newspaper Bengali Fonts */
+.font-tiro {
+  font-family: 'Tiro Bangla', 'Noto Serif Bengali', serif;
+}
+
+.font-serif-editorial {
+  font-family: 'Playfair Display', 'Newsreader', 'Tiro Bangla', 'Noto Serif Bengali', serif;
+}
+
+.font-sans-editorial {
+  font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
+}
+
+.font-mono-numbers {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.font-bengali {
+  font-family: 'Tiro Bangla', 'Noto Serif Bengali', serif;
+}
+
+.font-bengali-ui {
+  font-family: 'Hind Siliguri', 'Tiro Bangla', sans-serif;
+}
+
+/* Newspaper Broadsheet Double Rules and Borders */
+.border-newspaper-double {
+  border-bottom: 3px double #141210;
+}
+
+.border-newspaper-double-t {
+  border-top: 3px double #141210;
+}
+
+.border-newspaper-rule {
+  border-color: rgba(20, 18, 16, 0.18);
+}
+
+.bg-newsprint {
+  background-color: #F5F2EB;
+}
+
+.bg-newsprint-card {
+  background-color: #FCFBF8;
+}
+
+.bg-newsprint-muted {
+  background-color: #EDE9DF;
+}
+
+/* Authentic Newspaper Drop Cap */
+.drop-cap:first-letter {
+  font-family: 'Playfair Display', 'Tiro Bangla', serif;
+  float: left;
+  font-size: 3.25rem;
+  line-height: 0.85;
+  padding-top: 4px;
+  padding-right: 8px;
+  padding-bottom: 2px;
+  font-weight: bold;
+  color: #141210;
+}
+
+/* Custom keypress feedback animations */
+@keyframes key-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.94) translateY(2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.animate-key-pop {
+  animation: key-pop 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-cursor-pulse {
+  animation: cursor-blink 1s ease-in-out infinite;
+}
+
+/* Subtle newspaper column dividers */
+.newspaper-columns {
+  column-count: 2;
+  column-gap: 2rem;
+  column-rule: 1px solid rgba(20, 18, 16, 0.15);
+}
+
+@media (min-width: 1024px) {
+  .newspaper-columns-3 {
+    column-count: 3;
+    column-gap: 2rem;
+    column-rule: 1px solid rgba(20, 18, 16, 0.15);
+  }
+}

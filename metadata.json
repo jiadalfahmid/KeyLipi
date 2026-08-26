@@ -1,0 +1,6 @@
+{
+  "name": "KeyLipi",
+  "description": "Interactive, progressive Bangla touch typing mastery system featuring Bijoy, Avro & Jatiya layouts, 20-module progressive curriculum, dedicated Juktakkhor mastery tree with decomposed ligatures, and 4-tier official competency certification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
