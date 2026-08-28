@@ -1121,3 +1121,17 @@ CURRICULUM_MODULES.forEach((mod) => {
     mod.lessons = flatLessons;
   }
 });
+
+export const getModuleLessons = (moduleId: string) => {
+  const mod = CURRICULUM_MODULES.find((m) => m.id === moduleId);
+  if (!mod) return [];
+  return mod.lessons && mod.lessons.length > 0
+    ? mod.lessons
+    : (mod.units || []).flatMap((u) => u.lessons);
+};
+
+export const isModuleCompleted = (moduleId: string, completedLessons: string[] = []): boolean => {
+  const lessons = getModuleLessons(moduleId);
+  if (lessons.length === 0) return false;
+  return lessons.every((l) => completedLessons.includes(l.id));
+};

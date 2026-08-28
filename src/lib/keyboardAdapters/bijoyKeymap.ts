@@ -7,7 +7,7 @@ export const BIJOY_KEYMAP: Record<string, KeyMapEntry> = {
   Digit1: { code: 'Digit1', key: '1', label: '১', shiftLabel: '!', finger: 'left-pinky', hand: 'left', row: 'number' },
   Digit2: { code: 'Digit2', key: '2', label: '২', shiftLabel: '@', finger: 'left-ring', hand: 'left', row: 'number' },
   Digit3: { code: 'Digit3', key: '3', label: '৩', shiftLabel: '#', finger: 'left-middle', hand: 'left', row: 'number' },
-  Digit4: { code: 'Digit4', key: '4', label: '৪', shiftLabel: '$', finger: 'left-index', hand: 'left', row: 'number' },
+  Digit4: { code: 'Digit4', key: '4', label: '৪', shiftLabel: '৳', finger: 'left-index', hand: 'left', row: 'number' },
   Digit5: { code: 'Digit5', key: '5', label: '৫', shiftLabel: '%', finger: 'left-index', hand: 'left', row: 'number' },
   Digit6: { code: 'Digit6', key: '6', label: '৬', shiftLabel: '^', finger: 'right-index', hand: 'right', row: 'number' },
   Digit7: { code: 'Digit7', key: '7', label: '৭', shiftLabel: '&', finger: 'right-index', hand: 'right', row: 'number' },
@@ -19,7 +19,7 @@ export const BIJOY_KEYMAP: Record<string, KeyMapEntry> = {
 
   // Top Row
   KeyQ: { code: 'KeyQ', key: 'q', label: 'ঙ', shiftLabel: 'ং', finger: 'left-pinky', hand: 'left', row: 'top' },
-  KeyW: { code: 'KeyW', key: 'w', label: 'য', shiftLabel: 'য়', finger: 'left-ring', hand: 'left', row: 'top' },
+  KeyW: { code: 'KeyW', key: 'w', label: 'য', shiftLabel: 'য়', finger: 'left-ring', hand: 'left', row: 'top' },
   KeyE: { code: 'KeyE', key: 'e', label: 'ড', shiftLabel: 'ঢ', finger: 'left-middle', hand: 'left', row: 'top' },
   KeyR: { code: 'KeyR', key: 'r', label: 'প', shiftLabel: 'ফ', finger: 'left-index', hand: 'left', row: 'top' },
   KeyT: { code: 'KeyT', key: 't', label: 'ট', shiftLabel: 'ঠ', finger: 'left-index', hand: 'left', row: 'top' },
@@ -30,6 +30,7 @@ export const BIJOY_KEYMAP: Record<string, KeyMapEntry> = {
   KeyP: { code: 'KeyP', key: 'p', label: 'ড়', shiftLabel: 'ঢ়', finger: 'right-pinky', hand: 'right', row: 'top' },
   BracketLeft: { code: 'BracketLeft', key: '[', label: '[', shiftLabel: '{', finger: 'right-pinky', hand: 'right', row: 'top' },
   BracketRight: { code: 'BracketRight', key: ']', label: ']', shiftLabel: '}', finger: 'right-pinky', hand: 'right', row: 'top' },
+  Backslash: { code: 'Backslash', key: '\\', label: 'ৎ', shiftLabel: '|', finger: 'right-pinky', hand: 'right', row: 'top' },
 
   // Home Row
   KeyA: { code: 'KeyA', key: 'a', label: 'ৃ', shiftLabel: 'র্', finger: 'left-pinky', hand: 'left', row: 'home' },
@@ -62,7 +63,7 @@ export const BIJOY_KEYMAP: Record<string, KeyMapEntry> = {
 
 // Character to Bijoy keystroke mapping
 export const BIJOY_CHAR_TO_KEYSTROKES: Record<string, { key: string; shift: boolean }[]> = {
-  // Independent Vowels
+  // Independent Vowels (Swaroborno)
   'অ': [{ key: 'f', shift: true }],
   'আ': [{ key: 'g', shift: false }, { key: 'f', shift: false }],
   'ই': [{ key: 'g', shift: false }, { key: 'd', shift: false }],
@@ -87,7 +88,7 @@ export const BIJOY_CHAR_TO_KEYSTROKES: Record<string, { key: string; shift: bool
   'ো': [{ key: 'c', shift: false }, { key: 'f', shift: false }],
   'ৌ': [{ key: 'x', shift: true }],
 
-  // Consonants
+  // Consonants (Byanjonborno)
   'ক': [{ key: 'j', shift: false }],
   'খ': [{ key: 'j', shift: true }],
   'গ': [{ key: 'o', shift: false }],
@@ -122,23 +123,24 @@ export const BIJOY_CHAR_TO_KEYSTROKES: Record<string, { key: string; shift: bool
   'হ': [{ key: 'i', shift: false }],
   'ড়': [{ key: 'p', shift: false }],
   'ঢ়': [{ key: 'p', shift: true }],
+  'য়': [{ key: 'w', shift: true }],
   'য়': [{ key: 'w', shift: true }],
-  'ৎ': [{ key: 'g', shift: false }, { key: 'k', shift: true }],
+  'ৎ': [{ key: '\\', shift: false }], // Backslash in Bijoy 52
   'ং': [{ key: 'q', shift: true }],
   'ঃ': [{ key: 'n', shift: true }],
   'ঁ': [{ key: 'm', shift: true }],
-  '্': [{ key: 'g', shift: false }],
-  '।': [{ key: 'g', shift: true }],
+
+  // Special Linkers, Virama & Nukta
+  '্': [{ key: 'g', shift: false }], // Hasant/Virama -> key G, Left Index
+  '়': [{ key: 'p', shift: false }], // Nukta fallback -> key P, Right Pinky
+  '।': [{ key: 'g', shift: true }],  // Dari -> Shift + G, Left Index
+  '॥': [{ key: 'g', shift: true }, { key: 'g', shift: true }],
+  '৳': [{ key: '4', shift: true }],  // Taka -> Shift + 4, Left Index
   '্র': [{ key: 'z', shift: false }],
   '্য': [{ key: 'z', shift: true }],
   'র্': [{ key: 'a', shift: true }],
-  ',': [{ key: ',', shift: false }],
-  '.': [{ key: '.', shift: false }],
-  '?': [{ key: '/', shift: true }],
-  '!': [{ key: '1', shift: true }],
-  ';': [{ key: ';', shift: false }],
-  ':': [{ key: ';', shift: true }],
-  '-': [{ key: '-', shift: false }],
+
+  // Numbers
   '০': [{ key: '0', shift: false }],
   '১': [{ key: '1', shift: false }],
   '২': [{ key: '2', shift: false }],
@@ -149,5 +151,97 @@ export const BIJOY_CHAR_TO_KEYSTROKES: Record<string, { key: string; shift: bool
   '৭': [{ key: '7', shift: false }],
   '৮': [{ key: '8', shift: false }],
   '৯': [{ key: '9', shift: false }],
-  ' ': [{ key: ' ', shift: false }]
+
+  // Punctuations
+  ' ': [{ key: ' ', shift: false }],
+  ',': [{ key: ',', shift: false }],
+  '.': [{ key: '.', shift: false }],
+  '?': [{ key: '/', shift: true }],
+  '!': [{ key: '1', shift: true }],
+  ';': [{ key: ';', shift: false }],
+  ':': [{ key: ';', shift: true }],
+  '-': [{ key: '-', shift: false }],
+  '_': [{ key: '-', shift: true }],
+  '(': [{ key: '9', shift: true }],
+  ')': [{ key: '0', shift: true }],
+  '[': [{ key: '[', shift: false }],
+  ']': [{ key: ']', shift: false }],
+  '{': [{ key: '[', shift: true }],
+  '}': [{ key: ']', shift: true }],
+  '/': [{ key: '/', shift: false }],
+  '\\': [{ key: '\\', shift: false }],
+  '"': [{ key: "'", shift: true }],
+  "'": [{ key: "'", shift: false }],
+  '=': [{ key: '=', shift: false }],
+  '+': [{ key: '=', shift: true }],
+  '%': [{ key: '5', shift: true }],
+  '@': [{ key: '2', shift: true }],
+  '#': [{ key: '3', shift: true }],
+  '$': [{ key: '4', shift: true }],
+  '^': [{ key: '6', shift: true }],
+  '&': [{ key: '7', shift: true }],
+  '*': [{ key: '8', shift: true }],
+  '`': [{ key: '`', shift: false }],
+  '~': [{ key: '`', shift: true }],
+
+  // Common Conjuncts (Pre-calculated Bijoy key sequences)
+  'ক্ষ': [{ key: 'j', shift: false }, { key: 'g', shift: false }, { key: 'n', shift: false }],
+  'জ্ঞ': [{ key: 'u', shift: false }, { key: 'g', shift: false }, { key: 'i', shift: true }],
+  'ক্ত': [{ key: 'j', shift: false }, { key: 'g', shift: false }, { key: 'k', shift: false }],
+  'ক্র': [{ key: 'j', shift: false }, { key: 'z', shift: false }],
+  'ক্ল': [{ key: 'j', shift: false }, { key: 'g', shift: false }, { key: 'v', shift: true }],
+  'ঙ্ক': [{ key: 'q', shift: false }, { key: 'g', shift: false }, { key: 'j', shift: false }],
+  'ঙ্গ': [{ key: 'q', shift: false }, { key: 'g', shift: false }, { key: 'o', shift: false }],
+  'চ্চ': [{ key: 'y', shift: false }, { key: 'g', shift: false }, { key: 'y', shift: false }],
+  'চ্ছ': [{ key: 'y', shift: false }, { key: 'g', shift: false }, { key: 'y', shift: true }],
+  'ঞ্চ': [{ key: 'i', shift: true }, { key: 'g', shift: false }, { key: 'y', shift: false }],
+  'ঞ্জ': [{ key: 'i', shift: true }, { key: 'g', shift: false }, { key: 'u', shift: false }],
+  'ট্ট': [{ key: 't', shift: false }, { key: 'g', shift: false }, { key: 't', shift: false }],
+  'ট্র': [{ key: 't', shift: false }, { key: 'z', shift: false }],
+  'ণ্ট': [{ key: 'b', shift: true }, { key: 'g', shift: false }, { key: 't', shift: false }],
+  'ণ্ড': [{ key: 'b', shift: true }, { key: 'g', shift: false }, { key: 'e', shift: false }],
+  'ত্ত': [{ key: 'k', shift: false }, { key: 'g', shift: false }, { key: 'k', shift: false }],
+  'ত্র': [{ key: 'k', shift: false }, { key: 'z', shift: false }],
+  'ত্ব': [{ key: 'k', shift: false }, { key: 'g', shift: false }, { key: 'h', shift: false }],
+  'দ্দ': [{ key: 'l', shift: false }, { key: 'g', shift: false }, { key: 'l', shift: false }],
+  'দ্ধ': [{ key: 'l', shift: false }, { key: 'g', shift: false }, { key: 'l', shift: true }],
+  'দ্ব': [{ key: 'l', shift: false }, { key: 'g', shift: false }, { key: 'h', shift: false }],
+  'দ্ম': [{ key: 'l', shift: false }, { key: 'g', shift: false }, { key: 'm', shift: false }],
+  'দ্র': [{ key: 'l', shift: false }, { key: 'z', shift: false }],
+  'ন্ট': [{ key: 'b', shift: false }, { key: 'g', shift: false }, { key: 't', shift: false }],
+  'ন্ত': [{ key: 'b', shift: false }, { key: 'g', shift: false }, { key: 'k', shift: false }],
+  'ন্থ': [{ key: 'b', shift: false }, { key: 'g', shift: false }, { key: 'k', shift: true }],
+  'ন্দ': [{ key: 'b', shift: false }, { key: 'g', shift: false }, { key: 'l', shift: false }],
+  'ন্ধ': [{ key: 'b', shift: false }, { key: 'g', shift: false }, { key: 'l', shift: true }],
+  'ন্ন': [{ key: 'b', shift: false }, { key: 'g', shift: false }, { key: 'b', shift: false }],
+  'ন্ম': [{ key: 'b', shift: false }, { key: 'g', shift: false }, { key: 'm', shift: false }],
+  'প্ত': [{ key: 'r', shift: false }, { key: 'g', shift: false }, { key: 'k', shift: false }],
+  'প্ল': [{ key: 'r', shift: false }, { key: 'g', shift: false }, { key: 'v', shift: true }],
+  'প্র': [{ key: 'r', shift: false }, { key: 'z', shift: false }],
+  'ম্প': [{ key: 'm', shift: false }, { key: 'g', shift: false }, { key: 'r', shift: false }],
+  'ম্ব': [{ key: 'm', shift: false }, { key: 'g', shift: false }, { key: 'h', shift: false }],
+  'ম্ভ': [{ key: 'm', shift: false }, { key: 'g', shift: false }, { key: 'h', shift: true }],
+  'ম্ম': [{ key: 'm', shift: false }, { key: 'g', shift: false }, { key: 'm', shift: false }],
+  'ল্ল': [{ key: 'v', shift: true }, { key: 'g', shift: false }, { key: 'v', shift: true }],
+  'শ্চ': [{ key: ';', shift: true }, { key: 'g', shift: false }, { key: 'y', shift: false }],
+  'শ্র': [{ key: ';', shift: true }, { key: 'z', shift: false }],
+  'শ্ব': [{ key: ';', shift: true }, { key: 'g', shift: false }, { key: 'h', shift: false }],
+  'ষ্ট': [{ key: 'n', shift: false }, { key: 'g', shift: false }, { key: 't', shift: false }],
+  'ষ্ঠ': [{ key: 'n', shift: false }, { key: 'g', shift: false }, { key: 't', shift: true }],
+  'ষ্ণ': [{ key: 'n', shift: false }, { key: 'g', shift: false }, { key: 'b', shift: true }],
+  'ষ্প': [{ key: 'n', shift: false }, { key: 'g', shift: false }, { key: 'r', shift: false }],
+  'স্ত': [{ key: ';', shift: false }, { key: 'g', shift: false }, { key: 'k', shift: false }],
+  'স্থ': [{ key: ';', shift: false }, { key: 'g', shift: false }, { key: 'k', shift: true }],
+  'স্ন': [{ key: ';', shift: false }, { key: 'g', shift: false }, { key: 'b', shift: false }],
+  'স্প': [{ key: ';', shift: false }, { key: 'g', shift: false }, { key: 'r', shift: false }],
+  'স্ফ': [{ key: ';', shift: false }, { key: 'g', shift: false }, { key: 'r', shift: true }],
+  'স্ব': [{ key: ';', shift: false }, { key: 'g', shift: false }, { key: 'h', shift: false }],
+  'স্ম': [{ key: ';', shift: false }, { key: 'g', shift: false }, { key: 'm', shift: false }],
+  'স্র': [{ key: ';', shift: false }, { key: 'z', shift: false }],
+  'স্ল': [{ key: ';', shift: false }, { key: 'g', shift: false }, { key: 'v', shift: true }],
+  'হ্ন': [{ key: 'i', shift: false }, { key: 'g', shift: false }, { key: 'b', shift: false }],
+  'হ্ণ': [{ key: 'i', shift: false }, { key: 'g', shift: false }, { key: 'b', shift: true }],
+  'হ্ম': [{ key: 'i', shift: false }, { key: 'g', shift: false }, { key: 'm', shift: false }],
+  'হ্ল': [{ key: 'i', shift: false }, { key: 'g', shift: false }, { key: 'v', shift: true }],
+  'হ্র': [{ key: 'i', shift: false }, { key: 'z', shift: false }]
 };

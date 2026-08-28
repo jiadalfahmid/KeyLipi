@@ -26,21 +26,37 @@ export const LearningMap: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>('module-0');
 
+  const stepMilestones = [
+    { step: 1, label: 'কীবোর্ড পরিচিতি', targetMod: 'module-0', cat: 'foundation' },
+    { step: 2, label: 'হোম রো', targetMod: 'module-1', cat: 'foundation' },
+    { step: 3, label: 'কার', targetMod: 'module-2', cat: 'kar-shift' },
+    { step: 4, label: 'শিফট', targetMod: 'module-3', cat: 'kar-shift' },
+    { step: 5, label: 'ফলা', targetMod: 'module-6', cat: 'fola-hasanta' },
+    { step: 6, label: 'হসন্ত', targetMod: 'module-7', cat: 'fola-hasanta' },
+    { step: 7, label: 'যুক্তবর্ণ', targetMod: 'module-8', cat: 'juktoborno' },
+    { step: 8, label: 'শব্দ', targetMod: 'module-11', cat: 'words-sentences' },
+    { step: 9, label: 'বাক্য', targetMod: 'module-12', cat: 'words-sentences' },
+    { step: 10, label: 'অনুচ্ছেদ', targetMod: 'module-13', cat: 'paragraphs-cert' },
+    { step: 11, label: 'প্রফেশনাল সনদপত্র', targetMod: 'module-19', cat: 'paragraphs-cert' }
+  ];
+
   const categories = [
     { id: 'all', label: 'সকল ২০টি মডিউল (ALL)' },
-    { id: 'foundation', label: 'ভিত্তি (MODULE 0-4)' },
-    { id: 'consonants-fola', label: 'বর্ণমালা ও ফলা (5-6)' },
-    { id: 'juktoborno', label: 'যুক্তবর্ণ আর্কিটেকচার (7-10)' },
-    { id: 'fluency', label: 'শব্দ, বাক্য ও বাস্তব (11-14)' },
-    { id: 'advanced', label: 'অ্যাডাপ্টিভ ও পেশাদার (15-19)' }
+    { id: 'foundation', label: 'কীবোর্ড ও হোম রো (০-১)' },
+    { id: 'kar-shift', label: 'কার ও শিফট (২-৪)' },
+    { id: 'fola-hasanta', label: 'ফলা ও হসন্ত (৫-৭)' },
+    { id: 'juktoborno', label: 'যুক্তবর্ণ আর্কিটেকচার (৮-১০)' },
+    { id: 'words-sentences', label: 'শব্দ ও বাক্য (১১-১২)' },
+    { id: 'paragraphs-cert', label: 'অনুচ্ছেদ ও সনদপত্র (১৩-১৯)' }
   ];
 
   const filteredModules = CURRICULUM_MODULES.filter((module) => {
-    if (selectedCategory === 'foundation') return module.levelNumber <= 4;
-    if (selectedCategory === 'consonants-fola') return module.levelNumber >= 5 && module.levelNumber <= 6;
-    if (selectedCategory === 'juktoborno') return module.levelNumber >= 7 && module.levelNumber <= 10;
-    if (selectedCategory === 'fluency') return module.levelNumber >= 11 && module.levelNumber <= 14;
-    if (selectedCategory === 'advanced') return module.levelNumber >= 15;
+    if (selectedCategory === 'foundation') return module.levelNumber <= 1;
+    if (selectedCategory === 'kar-shift') return module.levelNumber >= 2 && module.levelNumber <= 4;
+    if (selectedCategory === 'fola-hasanta') return module.levelNumber >= 5 && module.levelNumber <= 7;
+    if (selectedCategory === 'juktoborno') return module.levelNumber >= 8 && module.levelNumber <= 10;
+    if (selectedCategory === 'words-sentences') return module.levelNumber >= 11 && module.levelNumber <= 12;
+    if (selectedCategory === 'paragraphs-cert') return module.levelNumber >= 13;
     return true;
   });
 
@@ -91,50 +107,130 @@ export const LearningMap: React.FC = () => {
     return module.lessons[0] || null;
   };
 
+  // Find latest unlocked / next actionable module
+  const getNextActiveModule = (): CurriculumModule => {
+    // First, search for the first module with an incomplete, unlocked lesson
+    for (const mod of CURRICULUM_MODULES) {
+      for (const les of mod.lessons) {
+        if (!user.completedLessons.includes(les.id) && isLessonUnlocked(les.id, mod.levelNumber)) {
+          return mod;
+        }
+      }
+    }
+    // If all completed or none found, pick highest unlocked module
+    for (let i = CURRICULUM_MODULES.length - 1; i >= 0; i--) {
+      if (isModuleUnlocked(CURRICULUM_MODULES[i])) {
+        return CURRICULUM_MODULES[i];
+      }
+    }
+    return CURRICULUM_MODULES[0];
+  };
+
+  const nextActiveModule = getNextActiveModule();
+
+  const handleJumpToLatestUnlockedModule = () => {
+    const targetModule = nextActiveModule;
+    if (!targetModule) return;
+
+    // Reset category filter so the module is in view
+    setSelectedCategory('all');
+    setExpandedModuleId(targetModule.id);
+
+    // Scroll smoothly to target module and highlight
+    setTimeout(() => {
+      const el = document.getElementById(targetModule.id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-4', 'ring-[#8B0000]');
+        setTimeout(() => {
+          el.classList.remove('ring-4', 'ring-[#8B0000]');
+        }, 1800);
+      }
+    }, 60);
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-8">
       {/* Newspaper Section Header */}
-      <div className="border-b-2 border-[#141210] pb-6 flex flex-wrap items-end justify-between gap-6">
+      <div className="border-b-2 border-[#141210] pb-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-1">
             <Newspaper className="w-4 h-4 text-[#8B0000]" />
             <span className="text-[11px] font-mono font-bold tracking-[0.25em] uppercase text-[#8B0000]">
               PROGRESSIVE MASTERY CURRICULUM &bull; ২০টি সুশৃঙ্খল মডিউল
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-tiro font-bold text-[#141210] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-tiro font-bold text-[#141210] tracking-tight">
             বাংলা স্পর্শ টাইপিং প্রগ্রেসিভ কারিকুলাম
           </h1>
-          <p className="text-sm font-tiro text-[#141210]/80 mt-1 max-w-3xl leading-relaxed">
-            কীবোর্ড পরিচিতি $\rightarrow$ হোম রো $\rightarrow$ কার $\rightarrow$ শিফট $\rightarrow$ ফলা $\rightarrow$ হসন্ত $\rightarrow$ যুক্তবর্ণ $\rightarrow$ শব্দ $\rightarrow$ বাক্য $\rightarrow$ অনুচ্ছেদ $\rightarrow$ প্রফেশনাল সনদপত্র।
-          </p>
         </div>
 
-        {/* Global Stats Dashboard Pill */}
-        <div className="flex items-center gap-5 bg-[#FCFBF8] p-4 border-2 border-[#141210]/40 shadow-2xs font-mono text-xs">
+        {/* Global Stats Dashboard Pill flexed to the heading */}
+        <div className="flex items-center gap-4 sm:gap-5 bg-[#FCFBF8] px-4 py-2.5 border-2 border-[#141210]/40 shadow-2xs font-mono text-xs">
           <div>
-            <div className="text-[10px] text-[#141210]/60 uppercase font-bold">কারিকুলাম অগ্রগতি</div>
-            <div className="text-lg font-bold text-[#141210] flex items-center gap-1.5 mt-0.5">
+            <div className="text-[10px] font-tiro text-[#141210]/70 font-bold">কারিকুলাম অগ্রগতি</div>
+            <div className="text-base sm:text-lg font-bold text-[#141210] flex items-center gap-1.5 mt-0.5">
               <span>{overallMasteryPercent}%</span>
               <span className="text-[11px] font-normal text-[#141210]/60">({totalCompletedCount}/{totalLessonsCount})</span>
             </div>
           </div>
-          <div className="h-9 w-[1px] bg-[#141210]/20"></div>
+          <div className="h-8 w-[1px] bg-[#141210]/20"></div>
           <div>
-            <div className="text-[10px] text-[#141210]/60 uppercase font-bold">অর্জিত পয়েন্ট</div>
-            <div className="text-lg font-bold text-amber-900 flex items-center gap-1 mt-0.5">
+            <div className="text-[10px] font-tiro text-[#141210]/70 font-bold">অর্জিত পয়েন্ট</div>
+            <div className="text-base sm:text-lg font-bold text-amber-900 flex items-center gap-1 mt-0.5">
               <Zap className="w-4 h-4 text-amber-600 fill-amber-500" />
               <span>{user.totalXp} XP</span>
             </div>
           </div>
-          <div className="h-9 w-[1px] bg-[#141210]/20"></div>
+          <div className="h-8 w-[1px] bg-[#141210]/20"></div>
           <button
-            onClick={() => setActiveTab('juktakkhor-lab')}
-            className="px-3 py-1.5 bg-[#8B0000] text-[#F5F2EB] text-[11px] font-tiro font-bold hover:bg-[#141210] transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+            type="button"
+            onClick={handleJumpToLatestUnlockedModule}
+            title={`মডিউল ${nextActiveModule.levelNumber}: ${nextActiveModule.title} এ যান`}
+            className="px-3.5 py-2 bg-[#8B0000] text-[#F5F2EB] text-[11px] font-tiro font-bold hover:bg-[#141210] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap active:scale-95"
           >
-            <span>যুক্তবর্ণ ট্রি</span>
-            <ArrowRight className="w-3 h-3" />
+            <span>পরবর্তী মডিউল ({nextActiveModule.levelNumber})</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
+        </div>
+      </div>
+
+      {/* Progressive 11-Step Interactive Pathway Ribbon */}
+      <div className="bg-[#FAF7F0] border-2 border-[#141210]/30 p-3 sm:p-4 shadow-2xs">
+        <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-[#141210]/15 text-xs font-tiro font-bold">
+          <span className="text-[11px] font-mono tracking-widest uppercase text-[#8B0000] flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5" />
+            কারিকুলাম শিখন রোডম্যাপ (১১টি ধাপ)
+          </span>
+          <span className="text-[11px] text-[#141210]/60 hidden sm:inline">
+            ধাপে ক্লিক করে সরাসরি মডিউলে যান
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+          {stepMilestones.map((ms, idx) => (
+            <React.Fragment key={ms.step}>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(ms.cat);
+                  setExpandedModuleId(ms.targetMod);
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-tiro whitespace-nowrap border transition-all cursor-pointer rounded-xs ${
+                  expandedModuleId === ms.targetMod
+                    ? 'bg-[#141210] text-[#F5F2EB] border-[#141210] font-bold shadow-2xs'
+                    : 'bg-[#FCFBF8] hover:bg-[#EDE9DF] text-[#141210]/85 border-[#141210]/20'
+                }`}
+              >
+                <span className="w-4 h-4 rounded-full bg-[#141210]/10 text-[10px] font-mono font-bold flex items-center justify-center">
+                  {ms.step}
+                </span>
+                <span>{ms.label}</span>
+              </button>
+              {idx < stepMilestones.length - 1 && (
+                <span className="text-[#141210]/30 font-bold select-none text-xs px-0.5">&rarr;</span>
+              )}
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
@@ -167,6 +263,7 @@ export const LearningMap: React.FC = () => {
           return (
             <div
               key={module.id}
+              id={module.id}
               className={`bg-[#FCFBF8] border-2 transition-all shadow-2xs ${
                 isComplete
                   ? 'border-[#141210]/50 bg-[#FAF7F0]'
@@ -182,7 +279,7 @@ export const LearningMap: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="px-2.5 py-0.5 bg-[#141210] text-[#F5F2EB] font-mono text-[10px] font-bold uppercase tracking-wider">
-                        LEVEL / MODULE {module.levelNumber}
+                        MODULE {module.levelNumber}
                       </span>
                       <span className="text-xs font-tiro font-bold text-[#8B0000]">
                         &bull; {module.badgeName}

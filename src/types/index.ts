@@ -180,6 +180,10 @@ export interface TypingStats {
 }
 
 export interface UserProfile {
+  uid?: string;
+  email?: string;
+  photoURL?: string;
+  isAnonymous?: boolean;
   username: string;
   displayName: string;
   preferredKeyboard: KeyboardLayoutId;
@@ -228,6 +232,7 @@ export interface Achievement {
   icon: string;
   category: 'speed' | 'accuracy' | 'streak' | 'lessons' | 'special';
   xpBonus: number;
+  requiresModuleId?: string; // e.g. 'module-1'
 }
 
 export interface DailyChallenge {
@@ -243,9 +248,11 @@ export interface DailyChallenge {
 
 export interface LeaderboardUser {
   id: string;
+  uid?: string;
   rank: number;
   username: string;
   displayName: string;
+  photoURL?: string;
   avatarLetter: string;
   topWpm: number;
   accuracy: number;

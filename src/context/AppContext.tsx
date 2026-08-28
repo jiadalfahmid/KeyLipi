@@ -1,7 +1,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { ACHIEVEMENTS_LIST } from '../data/achievements';
+import { isModuleCompleted } from '../data/curriculum';
 import { soundFx } from '../lib/audio';
-import { CertificationTier, JuktakkhorMasteryScore, KeyboardLayoutId, PracticeSessionRecord, UserProfile } from '../types';
+import {
+  CertificationTier,
+  JuktakkhorMasteryScore,
+  KeyboardLayoutId,
+  PracticeSessionRecord,
+  UserProfile
+} from '../types';
+import {
+  auth,
+  ensureAuth,
+  signInWithGoogle,
+  signOutUser,
+  syncUserProfileToFirestore,
+  fetchUserProfileFromFirestore,
+  publishSessionToFirestore,
+  updateUserProfileData,
+  checkUsernameAvailability,
+  testConnection
+} from '../lib/firebase';
 
 export type NavigationTab =
   | 'home'
@@ -15,6 +35,19 @@ export type NavigationTab =
 
 interface AppContextType {
   user: UserProfile;
+  authUser: FirebaseUser | null;
+  isAuthLoading: boolean;
+  isSyncing: boolean;
+  authError: string | null;
+  loginGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+  updateProfileName: (name: string) => Promise<void>;
+  updateUserProfile: (data: {
+    displayName?: string;
+    username?: string;
+    photoURL?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
+  setAuthError: (msg: string | null) => void;
   activeTab: NavigationTab;
   setActiveTab: (tab: NavigationTab) => void;
   selectedLessonId: string | null;
@@ -31,6 +64,10 @@ interface AppContextType {
   showOnboarding: boolean;
   setShowOnboarding: (show: boolean) => void;
   resetProgress: () => void;
+  isModule1Done: boolean;
+  isFocusMode: boolean;
+  setIsFocusMode: (focus: boolean | ((prev: boolean) => boolean)) => void;
+  toggleFocusMode: () => void;
 }
 
 const STORAGE_KEY = 'keylipi_user_profile_v1';
@@ -52,7 +89,7 @@ const sanitizeSessions = (sessions: PracticeSessionRecord[] = []): PracticeSessi
 const INITIAL_USER: UserProfile = {
   username: 'bangla_typist',
   displayName: 'বাংলা টাইপিস্ট',
-  preferredKeyboard: 'bijoy',
+  preferredKeyboard: 'avro',
   level: 1,
   totalXp: 150,
   streakDays: 1,
@@ -93,7 +130,7 @@ const INITIAL_USER: UserProfile = {
       timestamp: Date.now() - 3600000 * 2,
       mode: 'lesson',
       title: 'কীবোর্ডে হাতের বসার সঠিক নিয়ম',
-      keyboardLayout: 'bijoy',
+      keyboardLayout: 'avro',
       netWpm: 18,
       accuracy: 96,
       durationSeconds: 45,
@@ -105,6 +142,11 @@ const INITIAL_USER: UserProfile = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [authUser, setAuthUser] = useState<FirebaseUser | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const [user, setUser] = useState<UserProfile>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -127,21 +169,178 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeTab, setActiveTab] = useState<NavigationTab>('home');
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>('lesson-1-1');
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [isFocusMode, setIsFocusMode] = useState<boolean>(true);
 
-  // Sync to localStorage
+  const toggleFocusMode = () => {
+    setIsFocusMode((prev) => !prev);
+  };
+
+  const isModule1Done = isModuleCompleted('module-1', user.completedLessons || []);
+
+  // Validate connection & subscribe to Firebase Auth state changes
+  useEffect(() => {
+    testConnection();
+
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setIsAuthLoading(true);
+      if (fbUser) {
+        setAuthUser(fbUser);
+        try {
+          const cloudProfile = await fetchUserProfileFromFirestore(fbUser.uid);
+          if (cloudProfile) {
+            setUser((prev) => ({
+              ...prev,
+              ...cloudProfile,
+              uid: fbUser.uid,
+              email: fbUser.email || cloudProfile.email,
+              photoURL: fbUser.photoURL || cloudProfile.photoURL || prev.photoURL,
+              username: cloudProfile.username || prev.username,
+              displayName: cloudProfile.displayName || fbUser.displayName || prev.displayName,
+              recentSessions: sanitizeSessions(cloudProfile.recentSessions || prev.recentSessions)
+            }));
+          } else {
+            // First time login for this user - populate cloud from current state
+            const initialCloud: UserProfile = {
+              ...user,
+              uid: fbUser.uid,
+              email: fbUser.email || undefined,
+              photoURL: fbUser.photoURL || user.photoURL || undefined,
+              displayName: fbUser.displayName || user.displayName
+            };
+            setUser(initialCloud);
+            await syncUserProfileToFirestore(fbUser.uid, initialCloud);
+          }
+        } catch (err) {
+          console.warn('Profile load notice:', err);
+        }
+      } else {
+        setAuthUser(null);
+        // Ensure anonymous session for guest typing
+        ensureAuth().catch(() => {});
+      }
+      setIsAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Save to LocalStorage and Auto-Sync to Firestore
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     } catch {
       // Ignore
     }
-  }, [user]);
+
+    if (authUser?.uid) {
+      setIsSyncing(true);
+      const timer = setTimeout(() => {
+        syncUserProfileToFirestore(authUser.uid, user)
+          .catch(() => {})
+          .finally(() => setIsSyncing(false));
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [user, authUser?.uid]);
 
   // Sync sound settings to audio synth
   useEffect(() => {
     soundFx.setEnabled(user.soundEnabled);
     soundFx.setTheme(user.soundTheme);
   }, [user.soundEnabled, user.soundTheme]);
+
+  const loginGoogle = async () => {
+    setAuthError(null);
+    try {
+      const loggedInUser = await signInWithGoogle();
+      if (loggedInUser) {
+        setAuthUser(loggedInUser);
+        soundFx.playSuccessFanfare();
+      }
+    } catch (err: any) {
+      if (
+        err?.code === 'auth/popup-closed-by-user' ||
+        err?.code === 'auth/cancelled-popup-request' ||
+        err?.message?.includes('popup-closed-by-user') ||
+        err?.message?.includes('cancelled-popup-request')
+      ) {
+        return;
+      }
+      setAuthError(err?.message || 'লগইন ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOutUser();
+      setAuthUser(null);
+      setUser(INITIAL_USER);
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err: any) {
+      console.warn('Sign out error:', err);
+    }
+  };
+
+  const updateProfileName = async (name: string) => {
+    if (!name.trim()) return;
+    const cleanName = name.trim();
+    setUser((prev) => ({ ...prev, displayName: cleanName }));
+    if (authUser) {
+      await updateUserProfileData(cleanName);
+      await syncUserProfileToFirestore(authUser.uid, { ...user, displayName: cleanName });
+    }
+  };
+
+  const updateUserProfile = async (data: {
+    displayName?: string;
+    username?: string;
+    photoURL?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    const updates: Partial<UserProfile> = {};
+
+    if (data.displayName !== undefined) {
+      const trimmed = data.displayName.trim();
+      if (!trimmed) {
+        return { success: false, error: 'নাম খালি রাখা যাবে না।' };
+      }
+      updates.displayName = trimmed;
+    }
+
+    if (data.username !== undefined) {
+      const cleanUsername = data.username.trim().toLowerCase();
+      if (cleanUsername !== user.username) {
+        const check = await checkUsernameAvailability(cleanUsername, authUser?.uid || user.uid);
+        if (!check.available) {
+          return { success: false, error: check.error || 'এই ইউজার আইডিটি গ্রহণযোগ্য নয়।' };
+        }
+        updates.username = cleanUsername;
+      }
+    }
+
+    if (data.photoURL !== undefined) {
+      updates.photoURL = data.photoURL.trim();
+    }
+
+    const updatedUser: UserProfile = {
+      ...user,
+      ...updates
+    };
+
+    setUser(updatedUser);
+
+    if (authUser?.uid) {
+      try {
+        if (updates.displayName) {
+          await updateUserProfileData(updates.displayName, updates.photoURL);
+        }
+        await syncUserProfileToFirestore(authUser.uid, updatedUser);
+      } catch (err) {
+        console.warn('Update cloud profile notice:', err);
+      }
+    }
+
+    return { success: true };
+  };
 
   const setKeyboardLayout = (layout: KeyboardLayoutId) => {
     setUser((prev) => ({ ...prev, preferredKeyboard: layout }));
@@ -199,37 +398,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newStreak += 1;
     }
 
+    const updatedCompleted =
+      record.mode === 'lesson' && selectedLessonId && !user.completedLessons.includes(selectedLessonId)
+        ? [...user.completedLessons, selectedLessonId]
+        : user.completedLessons;
+
+    const module1Complete = isModuleCompleted('module-1', updatedCompleted);
+
     // Check achievement milestones
     const newUnlocked = [...user.unlockedAchievements];
-    if (record.netWpm >= 20 && !newUnlocked.includes('speed-20')) newUnlocked.push('speed-20');
-    if (record.netWpm >= 35 && !newUnlocked.includes('speed-35')) newUnlocked.push('speed-35');
-    if (record.netWpm >= 50 && !newUnlocked.includes('speed-50')) newUnlocked.push('speed-50');
+    
+    // WPM milestones: ONLY unlocked if Module 1 is completed!
+    if (module1Complete) {
+      if (record.netWpm >= 20 && !newUnlocked.includes('speed-20')) newUnlocked.push('speed-20');
+      if (record.netWpm >= 35 && !newUnlocked.includes('speed-35')) newUnlocked.push('speed-35');
+      if (record.netWpm >= 50 && !newUnlocked.includes('speed-50')) newUnlocked.push('speed-50');
+    }
+
     if (record.accuracy >= 100 && !newUnlocked.includes('accuracy-sniper')) newUnlocked.push('accuracy-sniper');
     if (newStreak >= 3 && !newUnlocked.includes('streak-3')) newUnlocked.push('streak-3');
     if (newStreak >= 7 && !newUnlocked.includes('streak-7')) newUnlocked.push('streak-7');
 
-    setUser((prev) => {
-      const updatedCompleted = record.mode === 'lesson' && selectedLessonId && !prev.completedLessons.includes(selectedLessonId)
-        ? [...prev.completedLessons, selectedLessonId]
-        : prev.completedLessons;
+    const stars = record.accuracy >= 98 ? 3 : record.accuracy >= 92 ? 2 : 1;
+    const updatedStars = selectedLessonId
+      ? { ...user.lessonStars, [selectedLessonId]: Math.max(user.lessonStars[selectedLessonId] || 0, stars) }
+      : user.lessonStars;
 
-      const stars = record.accuracy >= 98 ? 3 : record.accuracy >= 92 ? 2 : 1;
-      const updatedStars = selectedLessonId ? { ...prev.lessonStars, [selectedLessonId]: Math.max(prev.lessonStars[selectedLessonId] || 0, stars) } : prev.lessonStars;
+    const rawSessions = [newRecord, ...(user.recentSessions || [])].slice(0, 30);
 
-      const rawSessions = [newRecord, ...(prev.recentSessions || [])].slice(0, 20);
+    const oldLevel = user.level;
+    const newTotalXp = user.totalXp + record.xpEarned;
+    const newLevel = calculateLevel(newTotalXp);
+    const leveledUp = newLevel > oldLevel;
+    if (leveledUp) {
+      soundFx.playSuccessFanfare();
+    }
 
-      return {
-        ...prev,
-        streakDays: newStreak,
-        lastPracticeDate: today,
-        unlockedAchievements: newUnlocked,
-        completedLessons: updatedCompleted,
-        lessonStars: updatedStars,
-        recentSessions: sanitizeSessions(rawSessions)
-      };
-    });
+    const updatedUser: UserProfile = {
+      ...user,
+      totalXp: newTotalXp,
+      level: newLevel,
+      streakDays: newStreak,
+      lastPracticeDate: today,
+      unlockedAchievements: newUnlocked,
+      completedLessons: updatedCompleted,
+      lessonStars: updatedStars,
+      recentSessions: sanitizeSessions(rawSessions)
+    };
 
-    addXp(record.xpEarned);
+    setUser(updatedUser);
+
+    // Publish to cloud leaderboard & sessions collection
+    publishSessionToFirestore(newRecord, updatedUser).catch(() => {});
   };
 
   const recordWeakKey = (key: string, isError: boolean) => {
@@ -294,12 +514,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const resetProgress = () => {
     setUser(INITIAL_USER);
     localStorage.removeItem(STORAGE_KEY);
+    if (authUser) {
+      syncUserProfileToFirestore(authUser.uid, INITIAL_USER);
+    }
   };
 
   return (
     <AppContext.Provider
       value={{
         user,
+        authUser,
+        isAuthLoading,
+        isSyncing,
+        authError,
+        loginGoogle,
+        logout,
+        updateProfileName,
+        updateUserProfile,
+        setAuthError,
         activeTab,
         setActiveTab,
         selectedLessonId,
@@ -315,7 +547,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         claimCertificate,
         showOnboarding,
         setShowOnboarding,
-        resetProgress
+        resetProgress,
+        isModule1Done,
+        isFocusMode,
+        setIsFocusMode,
+        toggleFocusMode
       }}
     >
       {children}

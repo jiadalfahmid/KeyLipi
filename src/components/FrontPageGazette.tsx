@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   Award,
@@ -23,6 +23,8 @@ import { JUKTAKKHOR_DATABASE } from '../data/juktakkhorData';
 import { TYPING_PASSAGES } from '../data/typingPassages';
 import { soundFx } from '../lib/audio';
 import { splitBanglaGraphemes } from '../lib/unicode';
+import { subscribeToLeaderboard } from '../lib/firebase';
+import { LeaderboardUser } from '../types';
 
 interface SamplePrompt {
   id: string;
@@ -59,6 +61,14 @@ export const FrontPageGazette: React.FC = () => {
   const [warmupInput, setWarmupInput] = useState('');
   const [warmupErrors, setWarmupErrors] = useState(0);
   const [warmupStartTime, setWarmupStartTime] = useState<number | null>(null);
+  const [topTypists, setTopTypists] = useState<LeaderboardUser[]>([]);
+
+  useEffect(() => {
+    const unsub = subscribeToLeaderboard((users) => {
+      setTopTypists(users.slice(0, 4));
+    });
+    return () => unsub();
+  }, []);
 
   const activePrompt = SAMPLE_PROMPTS[selectedPromptIndex];
   const targetGraphemes = useMemo(() => splitBanglaGraphemes(activePrompt.text), [activePrompt.text]);
@@ -334,7 +344,7 @@ export const FrontPageGazette: React.FC = () => {
                 className="group cursor-pointer p-2.5 bg-[#EDE9DF]/40 hover:bg-[#EDE9DF] border border-[#141210]/15 transition-colors rounded-xs"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase text-[#141210]/60 font-bold">লেভেল ১-৪</span>
+                  <span className="text-[10px] font-mono uppercase text-[#141210]/60 font-bold">মডিউল ১-৪</span>
                   <BookOpen className="w-3.5 h-3.5 text-[#141210]/60 group-hover:text-[#8B0000]" />
                 </div>
                 <h4 className="font-bold text-sm text-[#141210] group-hover:text-[#8B0000] transition-colors mt-0.5">
@@ -350,7 +360,7 @@ export const FrontPageGazette: React.FC = () => {
                 className="group cursor-pointer p-2.5 bg-[#EDE9DF]/40 hover:bg-[#EDE9DF] border border-[#141210]/15 transition-colors rounded-xs"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase text-[#141210]/60 font-bold">লেভেল ৫-৮</span>
+                  <span className="text-[10px] font-mono uppercase text-[#141210]/60 font-bold">মডিউল ৫-৮</span>
                   <Layout className="w-3.5 h-3.5 text-[#141210]/60 group-hover:text-[#8B0000]" />
                 </div>
                 <h4 className="font-bold text-sm text-[#141210] group-hover:text-[#8B0000] transition-colors mt-0.5">
@@ -366,7 +376,7 @@ export const FrontPageGazette: React.FC = () => {
                 className="group cursor-pointer p-2.5 bg-[#EDE9DF]/40 hover:bg-[#EDE9DF] border border-[#141210]/15 transition-colors rounded-xs"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase text-[#141210]/60 font-bold">লেভেল ৯-১২</span>
+                  <span className="text-[10px] font-mono uppercase text-[#141210]/60 font-bold">মডিউল ৯-১২</span>
                   <Zap className="w-3.5 h-3.5 text-[#141210]/60 group-hover:text-[#8B0000]" />
                 </div>
                 <h4 className="font-bold text-sm text-[#141210] group-hover:text-[#8B0000] transition-colors mt-0.5">
@@ -397,25 +407,34 @@ export const FrontPageGazette: React.FC = () => {
             </div>
 
             <div className="space-y-2 font-tiro text-xs">
-              {[
-                { rank: 1, name: 'তানভীর আহমেদ', wpm: 72, acc: 99, layout: 'Bijoy' },
-                { rank: 2, name: 'নুসরাত জাহান', wpm: 68, acc: 98, layout: 'Avro' },
-                { rank: 3, name: 'সাদিয়া ইসলাম', wpm: 64, acc: 97, layout: 'Jatiya' },
-                { rank: 4, name: 'রাকিবুল হাসান', wpm: 59, acc: 96, layout: 'Bijoy' }
-              ].map((item) => (
+              {(topTypists.length > 0
+                ? topTypists
+                : [
+                    { uid: '1', displayName: 'তানভীর আহমেদ', topWpm: 72, accuracy: 99, keyboard: 'bijoy' },
+                    { uid: '2', displayName: 'নুসরাত জাহান', topWpm: 68, accuracy: 98, keyboard: 'avro' },
+                    { uid: '3', displayName: 'সাদিয়া ইসলাম', topWpm: 64, accuracy: 97, keyboard: 'jatiya' },
+                    { uid: '4', displayName: 'রাকিবুল হাসান', topWpm: 59, accuracy: 96, keyboard: 'bijoy' }
+                  ]
+              ).map((item, idx) => (
                 <div
-                  key={item.rank}
+                  key={('uid' in item ? item.uid : idx) || idx}
                   className="flex items-center justify-between bg-[#FCFBF8] p-2 border border-[#141210]/15 rounded-xs"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-xs w-4 text-center text-[#141210]/60">
-                      {item.rank}.
+                    <span className="font-mono font-bold text-xs w-4 text-center text-[#8B0000]">
+                      {idx + 1}.
                     </span>
-                    <span className="font-bold text-[#141210]">{item.name}</span>
+                    <span className="font-bold text-[#141210] truncate max-w-[130px]">
+                      {'displayName' in item ? item.displayName : (item as any).name}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 font-mono text-[11px]">
-                    <span className="font-bold text-[#141210]">{item.wpm} WPM</span>
-                    <span className="text-[#141210]/50">({item.acc}%)</span>
+                    <span className="font-bold text-[#141210]">
+                      {'topWpm' in item ? item.topWpm : (item as any).wpm} WPM
+                    </span>
+                    <span className="text-[#141210]/50">
+                      ({'accuracy' in item ? item.accuracy : (item as any).acc}%)
+                    </span>
                   </div>
                 </div>
               ))}

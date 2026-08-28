@@ -2,10 +2,23 @@
  * Robust Bangla Unicode segmentation, normalization, and comparison engine
  */
 
+// Canonicalize decomposed or inconsistent Bangla Unicode representations
+export function canonicalizeBanglaUnicode(text: string): string {
+  if (!text) return '';
+  return text
+    .normalize('NFC')
+    // Normalize decomposed forms
+    .replace(/\u09AF\u09BC/g, '\u09DF') // য + ় -> য় (Ontostyo-a)
+    .replace(/\u09A1\u09BC/g, '\u09DC') // ড + ় -> ড়
+    .replace(/\u09A2\u09BC/g, '\u09DD') // ঢ + ় -> ঢ়
+    .replace(/\u09C7\u09BE/g, '\u09CB') // ে + া -> ো (O-kar)
+    .replace(/\u09C7\u09D7/g, '\u09CC'); // ে + ৗ -> ৌ (Ou-kar)
+}
+
 // Splits text into typable sequence of individual characters/codepoints
 export function splitBanglaTypingTokens(text: string): string[] {
   if (!text) return [];
-  const normalized = text.normalize('NFC');
+  const normalized = canonicalizeBanglaUnicode(text);
   return Array.from(normalized);
 }
 
@@ -13,8 +26,8 @@ export function splitBanglaTypingTokens(text: string): string[] {
 export function splitBanglaGraphemes(text: string): string[] {
   if (!text) return [];
 
-  // Normalize Unicode to NFC standard
-  const normalized = text.normalize('NFC');
+  // Canonicalize and normalize Unicode to NFC standard
+  const normalized = canonicalizeBanglaUnicode(text);
 
   if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
     try {

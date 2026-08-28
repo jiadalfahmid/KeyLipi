@@ -56,7 +56,7 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
       hand: 'left',
       nameBn: 'কনিষ্ঠা',
       nameEn: 'Pinky',
-      keys: 'A S Q Z 1 Shift',
+      keys: 'A Q Z 1 ~ Shift',
       colorName: 'Rose',
       bgHex: '#FFE4E6',
       accentHex: '#E11D48',
@@ -455,8 +455,8 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
                           width="32"
                           height="18"
                           rx="3"
-                          fill="#1A1A1A"
-                          stroke="#F2F0ED"
+                          fill="#8B0000"
+                          stroke="#F5F2EB"
                           strokeWidth="1"
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -465,7 +465,7 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
                         {/* Downward pointer triangle */}
                         <polygon
                           points={`${f.tipX - 3},${f.tipY - 4} ${f.tipX + 3},${f.tipY - 4} ${f.tipX},${f.tipY - 1}`}
-                          fill="#1A1A1A"
+                          fill="#8B0000"
                         />
                         {/* Target key text inside badge */}
                         <text
@@ -475,7 +475,7 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
                           fontSize="9"
                           fontFamily="monospace"
                           fontWeight="bold"
-                          fill="#FFFFFF"
+                          fill="#F5F2EB"
                         >
                           {isShiftIndicator
                             ? 'SHIFT'
@@ -495,7 +495,7 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
         </div>
 
         {/* Finger Quick Labels Bar */}
-        <div className="w-full grid grid-cols-5 gap-1 pt-2 border-t border-[#1A1A1A]/10 text-center">
+        <div className="w-full grid grid-cols-5 gap-1 pt-2 border-t border-[#141210]/15 text-center">
           {fingers.map((f) => {
             const active = isFingerActive(f);
             return (
@@ -503,11 +503,11 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
                 key={`lbl-${f.id}-${f.hand}`}
                 className={`py-1 px-0.5 rounded-xs transition-all duration-150 flex flex-col items-center ${
                   active
-                    ? 'bg-[#1A1A1A] text-[#F2F0ED] shadow-xs'
-                    : 'bg-[#F5F3EF]/60 text-[#1A1A1A]/70 hover:bg-[#EAE8E3]'
+                    ? 'bg-[#141210] text-[#F5F2EB] shadow-xs'
+                    : 'bg-[#EDE9DF]/60 text-[#141210]/70 hover:bg-[#EDE9DF]'
                 }`}
               >
-                <span className="text-[9px] font-bengali font-bold leading-tight truncate w-full">
+                <span className="text-[9px] font-tiro font-bold leading-tight truncate w-full">
                   {f.nameBn}
                 </span>
                 <span
@@ -538,7 +538,7 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
       return {
         bn: 'ডান অথবা বাম বৃদ্ধাঙ্গুলি দিয়ে স্পেসবার (Spacebar) আলতো চাপ দিন।',
         en: 'Strike the Spacebar with your thumb.',
-        fingerText: 'বৃদ্ধাঙ্গুলি ➔ Spacebar'
+        fingerText: 'বৃদ্ধাঙ্গুলি &rarr; Spacebar'
       };
     }
 
@@ -562,39 +562,39 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
     return {
       bn: `${strikingHandText}ের ${fingerName} দিয়ে '${activeKeyChar}' কি চাপুন ও হোম কীতে ফিরুন।`,
       en: `Strike '${activeKeyChar}' using ${strikingHandText} ${fingerName} and return to home base.`,
-      fingerText: `${strikingHandText} ${fingerName} ➔ '${activeKeyChar}'`
+      fingerText: `${strikingHandText} ${fingerName} &rarr; '${activeKeyChar}'`
     };
   };
 
   const instruction = getActiveInstruction();
 
   return (
-    <div className="w-full bg-[#EAE8E3]/60 border border-[#1A1A1A]/15 rounded-xs p-3 sm:p-4 flex flex-col gap-3 font-sans">
+    <div className="w-full bg-[#EDE9DF]/60 border-2 border-[#141210]/20 rounded-xs p-3 sm:p-4 flex flex-col gap-3 font-tiro shadow-2xs">
       {/* Hand Guide Header with Live Step Guidance */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#1A1A1A]/10 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#141210]/15 text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-[#1A1A1A] text-[#F2F0ED] flex items-center justify-center text-xs">
+          <div className="w-5 h-5 rounded-full bg-[#8B0000] text-[#F5F2EB] flex items-center justify-center text-xs shadow-2xs">
             <Keyboard className="w-3 h-3" />
           </div>
           <div>
-            <span className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A]/50 block">
-              টাচ-টাইপিং আঙুল নির্দেশিকা (Finger Mechanics)
+            <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#8B0000] block">
+              FINGER MECHANICS &bull; টাচ-টাইপিং আঙুল নির্দেশিকা
             </span>
-            <span className="text-xs font-serif-editorial font-bold text-[#1A1A1A]">
+            <span className="text-xs font-tiro font-bold text-[#141210]">
               {instruction.fingerText}
             </span>
           </div>
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 font-mono">
           <button
             type="button"
             onClick={() => setViewMode('animated-hands')}
-            className={`px-2.5 py-1 text-[11px] font-mono font-bold transition-all rounded-xs cursor-pointer ${
+            className={`px-2.5 py-1 text-[11px] font-bold transition-all rounded-xs cursor-pointer ${
               viewMode === 'animated-hands'
-                ? 'bg-[#1A1A1A] text-[#F2F0ED] shadow-xs'
-                : 'bg-[#FFFFFF] text-[#1A1A1A]/70 border border-[#1A1A1A]/20 hover:bg-[#FFFFFF]'
+                ? 'bg-[#141210] text-[#F5F2EB] shadow-xs'
+                : 'bg-[#FCFBF8] text-[#141210]/70 border border-[#141210]/20 hover:bg-[#EDE9DF]'
             }`}
           >
             হাত অ্যানিমেশন (Hands)
@@ -602,10 +602,10 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
           <button
             type="button"
             onClick={() => setViewMode('compact')}
-            className={`px-2.5 py-1 text-[11px] font-mono font-bold transition-all rounded-xs cursor-pointer ${
+            className={`px-2.5 py-1 text-[11px] font-bold transition-all rounded-xs cursor-pointer ${
               viewMode === 'compact'
-                ? 'bg-[#1A1A1A] text-[#F2F0ED] shadow-xs'
-                : 'bg-[#FFFFFF] text-[#1A1A1A]/70 border border-[#1A1A1A]/20 hover:bg-[#FFFFFF]'
+                ? 'bg-[#141210] text-[#F5F2EB] shadow-xs'
+                : 'bg-[#FCFBF8] text-[#141210]/70 border border-[#141210]/20 hover:bg-[#EDE9DF]'
             }`}
           >
             কমপ্যাক্ট বার (Compact)
@@ -624,15 +624,15 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
             className="flex flex-col gap-3"
           >
             {/* Live Instruction Pill */}
-            <div className="bg-[#FFFFFF] border border-[#1A1A1A]/10 p-2.5 rounded-xs flex items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="bg-[#FCFBF8] border border-[#141210]/15 p-2.5 rounded-xs flex items-center justify-between gap-3 text-xs shadow-2xs">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                <p className="font-bengali font-medium text-[#1A1A1A]">
+                <p className="font-tiro font-bold text-[#141210]">
                   {instruction.bn}
                 </p>
               </div>
-              <span className="text-[10px] font-mono text-[#1A1A1A]/50 hidden sm:inline-block">
-                F & J কীদ্বয়ে উঁচু দাগ (Tactile Bumps) হাতকে সঠিক অবস্থানে রাখে
+              <span className="text-[10px] font-mono text-[#141210]/60 hidden sm:inline-block">
+                F ও J কীদ্বয়ে উঁচু দাগ (Tactile Bumps) হাতকে সঠিক অবস্থানে রাখে
               </span>
             </div>
 
@@ -649,11 +649,11 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#FFFFFF] border border-[#1A1A1A]/15 text-xs font-sans rounded-xs"
+            className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#FCFBF8] border border-[#141210]/20 text-xs rounded-xs shadow-2xs"
           >
             {/* Left Hand Compact */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]/50">
+              <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-[#8B0000]">
                 বাম হাত:
               </span>
               <div className="flex items-center gap-1">
@@ -662,10 +662,10 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
                   return (
                     <span
                       key={`comp-l-${f.id}`}
-                      className={`px-2 py-0.5 text-[11px] font-bengali rounded-xs transition-all ${
+                      className={`px-2 py-0.5 text-[11px] font-tiro rounded-xs transition-all ${
                         active
-                          ? 'bg-[#1A1A1A] text-[#F2F0ED] font-bold ring-2 ring-[#1A1A1A]'
-                          : 'bg-[#F5F3EF] text-[#1A1A1A]/70 border border-[#1A1A1A]/15'
+                          ? 'bg-[#141210] text-[#F5F2EB] font-bold ring-2 ring-[#8B0000]'
+                          : 'bg-[#EDE9DF] text-[#141210]/70 border border-[#141210]/15'
                       }`}
                       title={`${f.nameEn} (${f.keys})`}
                     >
@@ -679,10 +679,10 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
             {/* Thumb */}
             <div className="flex items-center gap-1">
               <span
-                className={`px-2.5 py-0.5 text-[11px] font-bengali rounded-xs transition-all ${
+                className={`px-2.5 py-0.5 text-[11px] font-tiro rounded-xs transition-all ${
                   activeFinger === 'thumb'
-                    ? 'bg-[#1A1A1A] text-[#F2F0ED] font-bold ring-2 ring-[#1A1A1A]'
-                    : 'bg-[#F5F3EF] text-[#1A1A1A]/70 border border-[#1A1A1A]/15'
+                    ? 'bg-[#141210] text-[#F5F2EB] font-bold ring-2 ring-[#8B0000]'
+                    : 'bg-[#EDE9DF] text-[#141210]/70 border border-[#141210]/15'
                 }`}
                 title="Thumb (Spacebar)"
               >
@@ -698,10 +698,10 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
                   return (
                     <span
                       key={`comp-r-${f.id}`}
-                      className={`px-2 py-0.5 text-[11px] font-bengali rounded-xs transition-all ${
+                      className={`px-2 py-0.5 text-[11px] font-tiro rounded-xs transition-all ${
                         active
-                          ? 'bg-[#1A1A1A] text-[#F2F0ED] font-bold ring-2 ring-[#1A1A1A]'
-                          : 'bg-[#F5F3EF] text-[#1A1A1A]/70 border border-[#1A1A1A]/15'
+                          ? 'bg-[#141210] text-[#F5F2EB] font-bold ring-2 ring-[#8B0000]'
+                          : 'bg-[#EDE9DF] text-[#141210]/70 border border-[#141210]/15'
                       }`}
                       title={`${f.nameEn} (${f.keys})`}
                     >
@@ -710,7 +710,7 @@ export const HandGuides: React.FC<HandGuidesProps> = ({
                   );
                 })}
               </div>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]/50">
+              <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-[#8B0000]">
                 : ডান হাত
               </span>
             </div>

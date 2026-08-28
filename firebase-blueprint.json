@@ -1,0 +1,82 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with touch typing progress, level, streaks, certificates and mastery scores",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "preferredKeyboard": { "type": "string", "enum": ["avro", "bijoy", "jatiya"] },
+        "level": { "type": "number" },
+        "totalXp": { "type": "number" },
+        "streakDays": { "type": "number" },
+        "lastPracticeDate": { "type": "string" },
+        "streakFreezes": { "type": "number" },
+        "completedLessons": { "type": "array" },
+        "lessonStars": { "type": "object" },
+        "unlockedAchievements": { "type": "array" },
+        "soundEnabled": { "type": "boolean" },
+        "soundTheme": { "type": "string" },
+        "language": { "type": "string" },
+        "weakKeys": { "type": "object" },
+        "juktakkhorMastery": { "type": "object" },
+        "earnedCertificates": { "type": "object" },
+        "recentSessions": { "type": "array" }
+      },
+      "required": ["uid", "displayName", "level", "totalXp"]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Public high score and touch typing rating for the national community leaderboard",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "level": { "type": "number" },
+        "totalXp": { "type": "number" },
+        "topWpm": { "type": "number" },
+        "accuracy": { "type": "number" },
+        "layout": { "type": "string" },
+        "streak": { "type": "number" },
+        "badge": { "type": "string" }
+      },
+      "required": ["uid", "displayName", "totalXp", "topWpm", "accuracy"]
+    },
+    "PracticeSession": {
+      "title": "PracticeSession",
+      "description": "Log of completed typing tests, lessons, games and exercises",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "mode": { "type": "string" },
+        "title": { "type": "string" },
+        "keyboardLayout": { "type": "string" },
+        "netWpm": { "type": "number" },
+        "accuracy": { "type": "number" },
+        "durationSeconds": { "type": "number" },
+        "xpEarned": { "type": "number" }
+      },
+      "required": ["id", "uid", "netWpm", "accuracy"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Private user account profile, progress and settings"
+    },
+    "/leaderboard/{userId}": {
+      "schema": "LeaderboardEntry",
+      "description": "Public ranking leaderboard entry for each active typist"
+    },
+    "/sessions/{sessionId}": {
+      "schema": "PracticeSession",
+      "description": "Individual typing practice activity records"
+    }
+  }
+}

@@ -6,7 +6,8 @@ import { CURRICULUM_MODULES } from '../data/curriculum';
 import { soundFx } from '../lib/audio';
 import { getKeystrokeGuidance, translatePhysicalKeyToBijoy } from '../lib/keyboardAdapters';
 import { matchAvroKeystroke, transliterateAvro } from '../lib/avroPhoneticEngine';
-import { calculateWpm, diagnoseMistake, splitBanglaGraphemes, splitBanglaTypingTokens, BIJOY_VOWEL_COMPOSITIONS } from '../lib/unicode';
+import { validateKeystroke } from '../lib/inputValidator';
+import { calculateWpm, diagnoseMistake, splitBanglaGraphemes, splitBanglaTypingTokens, canonicalizeBanglaUnicode, BIJOY_VOWEL_COMPOSITIONS } from '../lib/unicode';
 import { Lesson } from '../types';
 import { TypingHUD } from './TypingHUD';
 import { VirtualKeyboard } from './VirtualKeyboard';
@@ -57,8 +58,10 @@ export const LessonPlayer: React.FC = () => {
   const [mistakeTip, setMistakeTip] = useState<string | null>(null);
   const [pendingVirama, setPendingVirama] = useState(false);
   const [avroBuffer, setAvroBuffer] = useState('');
+  const [isIdlePaused, setIsIdlePaused] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastActivityTimeRef = useRef<number>(Date.now());
 
   // Sub-tokens of the current active grapheme
   const currentGrapheme = graphemes[currentIndex] || '';
@@ -76,9 +79,11 @@ export const LessonPlayer: React.FC = () => {
     setMaxCombo(0);
     setElapsedSeconds(0);
     setTimerActive(false);
+    setIsIdlePaused(false);
     setMistakeTip(null);
     setPendingVirama(false);
     setAvroBuffer('');
+    lastActivityTimeRef.current = Date.now();
     if (timerRef.current) clearInterval(timerRef.current);
   }, []);
 
@@ -87,9 +92,22 @@ export const LessonPlayer: React.FC = () => {
     setStage('learn');
   }, [selectedLessonId, resetSession]);
 
-  // Timer tick
+  // Inactivity/Idle pause detection loop
   useEffect(() => {
-    if (timerActive) {
+    if (!timerActive || stage === 'completed' || stage === 'learn') return;
+
+    const idleInterval = setInterval(() => {
+      if (!isIdlePaused && Date.now() - lastActivityTimeRef.current > 3500) {
+        setIsIdlePaused(true);
+      }
+    }, 400);
+
+    return () => clearInterval(idleInterval);
+  }, [timerActive, stage, isIdlePaused]);
+
+  // Timer tick (freezes during pause)
+  useEffect(() => {
+    if (timerActive && !isIdlePaused) {
       timerRef.current = setInterval(() => {
         setElapsedSeconds((prev) => prev + 1);
       }, 1000);
@@ -99,20 +117,26 @@ export const LessonPlayer: React.FC = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [timerActive]);
+  }, [timerActive, isIdlePaused]);
 
   // Current expected token keystroke guide
   const keystrokeGuide = useMemo(() => {
+    if (user.preferredKeyboard === 'avro') {
+      if (!currentGrapheme) return [];
+      const fullGuide = getKeystrokeGuidance(currentGrapheme, 'avro');
+      if (avroBuffer.length > 0 && fullGuide.length > avroBuffer.length) {
+        return fullGuide.slice(avroBuffer.length);
+      }
+      return fullGuide;
+    }
+
     if (!activeExpectedToken) return [];
     const fullGuide = getKeystrokeGuidance(activeExpectedToken, user.preferredKeyboard);
-    if (user.preferredKeyboard === 'avro' && avroBuffer.length > 0 && fullGuide.length > avroBuffer.length) {
-      return fullGuide.slice(avroBuffer.length);
-    }
     if (pendingVirama && fullGuide.length > 1) {
       return fullGuide.slice(1);
     }
     return fullGuide;
-  }, [activeExpectedToken, user.preferredKeyboard, pendingVirama, avroBuffer]);
+  }, [activeExpectedToken, currentGrapheme, user.preferredKeyboard, pendingVirama, avroBuffer]);
 
   // Real-time WPM & accuracy
   const { netWpm, cpm } = useMemo(() => {
@@ -191,14 +215,18 @@ export const LessonPlayer: React.FC = () => {
 
       setTotalKeystrokes((prev) => prev + 1);
 
-      // Check full grapheme match (e.g. from IME) or sub-token match
+      // Check full grapheme match (e.g. from IME) or sub-token match with canonicalized Unicode
+      const normInput = canonicalizeBanglaUnicode(inputChar);
+      const normCurrentGrapheme = canonicalizeBanglaUnicode(currentGrapheme);
+      const normExpectedToken = canonicalizeBanglaUnicode(expectedToken);
+
       const isFullGraphemeMatch =
-        inputChar.normalize('NFC') === currentGrapheme.normalize('NFC') ||
-        (currentGrapheme === ' ' && inputChar === ' ');
+        normInput === normCurrentGrapheme ||
+        (normCurrentGrapheme === ' ' && normInput === ' ');
 
       const isSubTokenMatch =
-        inputChar.normalize('NFC') === expectedToken.normalize('NFC') ||
-        (expectedToken === ' ' && inputChar === ' ');
+        normInput === normExpectedToken ||
+        (normExpectedToken === ' ' && normInput === ' ');
 
       if (isFullGraphemeMatch) {
         soundFx.playKeyClick(rawCode || currentGrapheme);
@@ -266,32 +294,148 @@ export const LessonPlayer: React.FC = () => {
     ]
   );
 
+  // Find next lesson
+  const nextLessonId = useMemo(() => {
+    let currentFound = false;
+    for (const mod of CURRICULUM_MODULES) {
+      for (const les of mod.lessons) {
+        if (currentFound) return les.id;
+        if (les.id === selectedLessonId) currentFound = true;
+      }
+    }
+    return null;
+  }, [selectedLessonId]);
+
   // Global physical keyboard listener
   useEffect(() => {
-    if (stage !== 'practice' && stage !== 'challenge') return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore standalone modifier and navigation keys so pressing Shift alone doesn't trigger mistakes
-      if (
-        e.key === 'Shift' ||
-        e.key === 'Control' ||
-        e.key === 'Alt' ||
-        e.key === 'Meta' ||
-        e.key === 'CapsLock' ||
-        e.key === 'Tab' ||
-        e.key === 'Escape' ||
-        e.code?.startsWith('Shift') ||
-        e.code?.startsWith('Control') ||
-        e.code?.startsWith('Alt')
-      ) {
+      // Stage 1 (Learn) keyboard shortcut
+      if (stage === 'learn') {
+        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
+          setStage('practice');
+          resetSession();
+          return;
+        }
+        if (e.key === '2') {
+          e.preventDefault();
+          setStage('practice');
+          resetSession();
+          return;
+        }
+        if (e.key === '3') {
+          e.preventDefault();
+          setStage('challenge');
+          resetSession();
+          return;
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setActiveTab('learn');
+          return;
+        }
+        return;
+      }
+
+      // Stage 4 (Completed) keyboard shortcuts
+      if (stage === 'completed') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (nextLessonId) {
+            startLesson(nextLessonId);
+          } else {
+            setActiveTab('learn');
+          }
+          return;
+        }
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          setStage('practice');
+          resetSession();
+          return;
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setActiveTab('learn');
+          return;
+        }
+        return;
+      }
+
+      // Stage 2 & 3: Practice & Challenge Mode
+
+      // Quick restart shortcut: Tab or Ctrl+Enter
+      if (e.key === 'Tab' || (e.ctrlKey && e.key === 'Enter')) {
+        e.preventDefault();
+        resetSession();
+        return;
+      }
+
+      // Escape key toggles pause
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsIdlePaused((prev) => !prev);
+        return;
+      }
+
+      // Switch stage shortcut when not actively in a typing streak
+      if (e.altKey || (!timerActive && ['1', '2', '3'].includes(e.key))) {
+        if (e.key === '1') {
+          setStage('learn');
+          resetSession();
+          return;
+        }
+        if (e.key === '2') {
+          setStage('practice');
+          resetSession();
+          return;
+        }
+        if (e.key === '3') {
+          setStage('challenge');
+          resetSession();
+          return;
+        }
+      }
+
+      // If idle paused, any key resumes
+      if (isIdlePaused) {
+        setIsIdlePaused(false);
+        lastActivityTimeRef.current = Date.now();
+        if (
+          e.key === 'Shift' ||
+          e.key === 'Control' ||
+          e.key === 'Alt' ||
+          e.key === 'Meta' ||
+          e.key === 'CapsLock'
+        ) {
+          return;
+        }
+      }
+
+      lastActivityTimeRef.current = Date.now();
+
+      const expectedToken = currentSubTokens[subTokenIndex] || currentGrapheme;
+      const valResult = validateKeystroke(
+        { key: e.key, code: e.code, shiftKey: e.shiftKey },
+        user.preferredKeyboard,
+        {
+          avroBuffer,
+          pendingVirama,
+          expectedToken,
+          currentGrapheme
+        }
+      );
+
+      // Ignore modifiers
+      if (valResult.action === 'modifier') {
         return;
       }
 
       setPressedKeyCode(e.code);
       setTimeout(() => setPressedKeyCode(null), 120);
 
-      // Handle Backspace
-      if (e.key === 'Backspace') {
+      // Backspace
+      if (valResult.action === 'backspace') {
         e.preventDefault();
         if (avroBuffer.length > 0) {
           setAvroBuffer((prev) => prev.slice(0, -1));
@@ -312,53 +456,44 @@ export const LessonPlayer: React.FC = () => {
         return;
       }
 
-      // If user is typing space
-      if (e.code === 'Space' || e.key === ' ') {
+      // Space
+      if (valResult.action === 'space') {
         e.preventDefault();
         setAvroBuffer('');
         handleCharInput(' ', e.code);
         return;
       }
 
-      // In Bijoy / Jatiya mode, accurately translate physical key and code
-      if (user.preferredKeyboard === 'bijoy' || user.preferredKeyboard === 'jatiya') {
+      // Avro Multi-character Buffer step
+      if (valResult.action === 'buffer' && valResult.newBuffer) {
         e.preventDefault();
-        const banglaChar = translatePhysicalKeyToBijoy(e.key, e.code, e.shiftKey);
-        handleCharInput(banglaChar, e.code);
-      } else {
-        // Avro mode: auto register transliteration phonetically
+        setAvroBuffer(valResult.newBuffer);
+        soundFx.playKeyClick();
+        setTotalKeystrokes((prev) => prev + 1);
+        setMistakeTip(
+          `অভ্র ফোনেটিক: '${expectedToken}' এর জন্য পরের কী চাপুন (Buffer: ${valResult.newBuffer})`
+        );
+        return;
+      }
+
+      // Rejected key / Double virama error
+      if (valResult.action === 'reject') {
         e.preventDefault();
-        if (!timerActive) {
-          setTimerActive(true);
+        soundFx.playMistakeBeep();
+        if (valResult.errorMessage) {
+          setMistakeTip(valResult.errorMessage);
         }
+        return;
+      }
 
-        const expectedToken = currentSubTokens[subTokenIndex] || currentGrapheme;
-
-        // If direct bangla unicode is entered from OS IME
-        if (e.key === expectedToken || e.key === currentGrapheme) {
-          setAvroBuffer('');
-          handleCharInput(e.key, e.code);
-          return;
-        }
-
-        const res = matchAvroKeystroke(e.key, expectedToken, avroBuffer);
-        if (res.isMatch) {
-          setAvroBuffer('');
-          handleCharInput(expectedToken, e.code);
-        } else if (res.newBuffer.length > 0 && res.newBuffer !== avroBuffer) {
-          // Valid multi-key sequence prefix (e.g. user typed 'k' for 'খ')
-          setAvroBuffer(res.newBuffer);
-          soundFx.playKeyClick();
-          setTotalKeystrokes((prev) => prev + 1);
-          setMistakeTip(
-            `অভ্র ফোনেটিক: '${expectedToken}' এর জন্য পরের কী চাপুন (Buffer: ${res.newBuffer})`
-          );
-        } else {
-          // Mistake / wrong key
-          setAvroBuffer('');
-          const transliterated = transliterateAvro(e.key);
-          handleCharInput(transliterated || e.key, e.code);
-        }
+      // Accept / Process char
+      e.preventDefault();
+      if (!timerActive) {
+        setTimerActive(true);
+      }
+      setAvroBuffer('');
+      if (valResult.charProduced) {
+        handleCharInput(valResult.charProduced, e.code);
       }
     };
 
@@ -374,20 +509,13 @@ export const LessonPlayer: React.FC = () => {
     avroBuffer,
     pendingVirama,
     timerActive,
-    handleCharInput
+    isIdlePaused,
+    nextLessonId,
+    handleCharInput,
+    resetSession,
+    startLesson,
+    setActiveTab
   ]);
-
-  // Find next lesson
-  const nextLessonId = useMemo(() => {
-    let currentFound = false;
-    for (const mod of CURRICULUM_MODULES) {
-      for (const les of mod.lessons) {
-        if (currentFound) return les.id;
-        if (les.id === selectedLessonId) currentFound = true;
-      }
-    }
-    return null;
-  }, [selectedLessonId]);
 
   if (!currentLesson) return null;
 
@@ -524,23 +652,25 @@ export const LessonPlayer: React.FC = () => {
 
       {/* STAGE 2 & 3: Practice & Challenge Typing HUD */}
       {(stage === 'practice' || stage === 'challenge') && (
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between text-xs font-sans">
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-sans">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#1A1A1A]/50">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#141210]/60 font-mono">
                 মোড:
               </span>
-              <span className="font-bold text-[#1A1A1A]">
-                {stage === 'practice' ? 'গাইডেড প্র্যাকটিস ড্রিল' : 'টাইমড স্পিড চ্যালেঞ্জ'}
+              <span className="font-bold text-[#141210]">
+                {stage === 'practice' ? 'গাইডেড প্র্যাকটিস ড্রিল (Practice)' : 'টাইমড স্পিড চ্যালেঞ্জ (Challenge)'}
               </span>
             </div>
-            <button
-              onClick={resetSession}
-              className="flex items-center gap-1 text-[#1A1A1A]/60 hover:text-[#1A1A1A] cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>রিসেট (Reset)</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={resetSession}
+                className="flex items-center gap-1 text-[#141210]/70 hover:text-[#141210] cursor-pointer font-bold"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>রিসেট [Tab ⇥]</span>
+              </button>
+            </div>
           </div>
 
           {/* Real-time Typing HUD Stage */}
@@ -559,7 +689,34 @@ export const LessonPlayer: React.FC = () => {
             mistakeTip={mistakeTip}
             subGraphemeIndex={subTokenIndex}
             subGraphemeTotal={currentSubTokens.length}
+            isPaused={isIdlePaused}
+            onResume={() => {
+              setIsIdlePaused(false);
+              lastActivityTimeRef.current = Date.now();
+            }}
+            showTwoLineCarousel={true}
           />
+
+          {/* Quick Keyboard Navigation Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 bg-[#EDE9DF]/70 border border-[#141210]/20 text-[11px] font-mono text-[#141210]/70 rounded-xs select-none">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-[#FCFBF8] border border-[#141210]/30 rounded font-bold shadow-2xs">Tab ⇥</kbd>
+                <span>রিস্টার্ট (Restart)</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-[#FCFBF8] border border-[#141210]/30 rounded font-bold shadow-2xs">Esc</kbd>
+                <span>বিরতি / রিজিউম (Pause)</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-[#FCFBF8] border border-[#141210]/30 rounded font-bold shadow-2xs">1 - 3</kbd>
+                <span>মোড পরিবর্তন</span>
+              </span>
+            </div>
+            <div className="text-[10px] text-[#141210]/60 italic font-tiro">
+              নিষ্ক্রিয় থাকলে স্বয়ংক্রিয় বিরতি সক্রিয় হবে (Monkeytype Style)
+            </div>
+          </div>
 
           {/* Interactive Virtual Keyboard */}
           <VirtualKeyboard
@@ -575,20 +732,20 @@ export const LessonPlayer: React.FC = () => {
 
       {/* STAGE 4: Completed Result Screen */}
       {stage === 'completed' && (
-        <div className="bg-[#FFFFFF] border border-[#1A1A1A]/15 p-8 sm:p-12 shadow-md flex flex-col items-center text-center gap-6 max-w-2xl mx-auto">
-          <div className="w-16 h-16 rounded-full border-2 border-[#1A1A1A] bg-[#EAE8E3] flex items-center justify-center text-[#1A1A1A]">
+        <div className="bg-[#FCFBF8] border-2 border-[#141210]/30 p-8 sm:p-12 shadow-md flex flex-col items-center text-center gap-6 max-w-2xl mx-auto rounded-xs">
+          <div className="w-16 h-16 rounded-full border-2 border-[#141210] bg-[#EDE9DF] flex items-center justify-center text-[#8B0000] shadow-2xs">
             <Award className="w-8 h-8" />
           </div>
 
           <div>
-            <span className="text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-[#1A1A1A]/50 mb-1 block">
-              LESSON COMPLETED
+            <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-[#8B0000] mb-1 block">
+              LESSON COMPLETED &bull; লেসন সম্পন্ন
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif-editorial font-bold text-[#1A1A1A]">
+            <h2 className="text-3xl sm:text-4xl font-tiro font-bold text-[#141210]">
               দারুণ কাজ! (Splendid Run)
             </h2>
-            <p className="text-sm font-bengali text-[#1A1A1A]/70 mt-1">
-              তুমি সফলভাবে লেসনটির সমস্ত শর্ত পূরণ করেছো।
+            <p className="text-sm font-tiro text-[#141210]/75 mt-1">
+              আপনি সফলভাবে লেসনটির সমস্ত শর্ত পূরণ করেছেন।
             </p>
           </div>
 
@@ -607,17 +764,17 @@ export const LessonPlayer: React.FC = () => {
           </div>
 
           {/* Score Metrics Grid */}
-          <div className="grid grid-cols-3 gap-4 w-full bg-[#F2F0ED] p-4 border border-[#1A1A1A]/10 text-center font-mono">
+          <div className="grid grid-cols-3 gap-4 w-full bg-[#EDE9DF] p-4 border border-[#141210]/20 text-center font-mono">
             <div>
-              <div className="text-[10px] text-[#1A1A1A]/50 uppercase font-sans font-bold">NET SPEED</div>
-              <div className="text-2xl font-bold text-[#1A1A1A]">{netWpm} WPM</div>
+              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">NET SPEED</div>
+              <div className="text-2xl font-bold text-[#141210]">{netWpm} WPM</div>
             </div>
-            <div className="border-x border-[#1A1A1A]/10">
-              <div className="text-[10px] text-[#1A1A1A]/50 uppercase font-sans font-bold">ACCURACY</div>
-              <div className="text-2xl font-bold text-emerald-700">{accuracy}%</div>
+            <div className="border-x border-[#141210]/20">
+              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">ACCURACY</div>
+              <div className="text-2xl font-bold text-emerald-800">{accuracy}%</div>
             </div>
             <div>
-              <div className="text-[10px] text-[#1A1A1A]/50 uppercase font-sans font-bold">XP EARNED</div>
+              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">XP EARNED</div>
               <div className="text-2xl font-bold text-amber-900">+{currentLesson.xpReward} XP</div>
             </div>
           </div>
@@ -629,24 +786,24 @@ export const LessonPlayer: React.FC = () => {
                 setStage('practice');
                 resetSession();
               }}
-              className="px-4 py-2.5 border border-[#1A1A1A]/20 bg-[#FFFFFF] hover:bg-[#EAE8E3] text-xs font-sans font-bold uppercase transition-colors cursor-pointer"
+              className="px-4 py-2.5 border border-[#141210]/30 bg-[#FCFBF8] hover:bg-[#EDE9DF] text-xs font-tiro font-bold uppercase transition-colors cursor-pointer rounded-xs"
             >
-              আবার চেষ্টা করি (Retry)
+              আবার চেষ্টা করুন [Tab ⇥]
             </button>
             {nextLessonId && (
               <button
                 onClick={() => startLesson(nextLessonId)}
-                className="px-6 py-2.5 bg-[#1A1A1A] text-[#F2F0ED] text-xs font-sans font-bold tracking-wider uppercase hover:bg-black transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                className="px-6 py-2.5 bg-[#141210] text-[#F5F2EB] text-xs font-tiro font-bold tracking-wider uppercase hover:bg-[#8B0000] transition-all flex items-center gap-2 cursor-pointer shadow-xs rounded-xs"
               >
-                <span>পরের লেসন (Next Lesson)</span>
+                <span>পরের লেসন [Enter ↵]</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}
             <button
               onClick={() => setActiveTab('learn')}
-              className="px-4 py-2.5 border border-[#1A1A1A]/20 bg-[#FFFFFF] hover:bg-[#EAE8E3] text-xs font-sans font-bold uppercase transition-colors cursor-pointer"
+              className="px-4 py-2.5 border border-[#141210]/30 bg-[#FCFBF8] hover:bg-[#EDE9DF] text-xs font-tiro font-bold uppercase transition-colors cursor-pointer rounded-xs"
             >
-              লেসন ম্যাপে ফিরি
+              লেসন ম্যাপে ফিরুন [Esc]
             </button>
           </div>
         </div>

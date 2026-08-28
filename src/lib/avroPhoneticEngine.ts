@@ -1,9 +1,11 @@
 /**
- * Full-featured Avro Phonetic transliteration engine for in-browser Bangla typing
- * Supports phonetics, contextual Kar attachments, conjuncts, and multi-character buffers
+ * Comprehensive Avro Phonetic Transliteration Engine for In-Browser Bangla Typing
+ * Complies with the official OmicronLab Avro Phonetic transliteration standard.
  */
 
-// Basic single-character consonants
+import { canonicalizeBanglaUnicode } from './unicode';
+
+// Basic single and double character consonants
 export const AVRO_CONSONANT_MAP: Record<string, string> = {
   k: 'ক',
   kh: 'খ',
@@ -13,6 +15,7 @@ export const AVRO_CONSONANT_MAP: Record<string, string> = {
   ng: 'ং',
   c: 'চ',
   ch: 'ছ',
+  chh: 'ছ',
   j: 'জ',
   jh: 'ঝ',
   NG: 'ঞ',
@@ -50,13 +53,12 @@ export const AVRO_CONSONANT_MAP: Record<string, string> = {
   W: 'ও'
 };
 
-// Vowels at word start / independent (Swaroborno)
+// Independent Vowels at word start / standalone (Swaroborno)
 export const AVRO_INDEPENDENT_VOWELS: Record<string, string> = {
+  o: 'অ',
+  A: 'অ',
   a: 'আ',
   aa: 'আ',
-  A: 'অ',
-  o: 'অ',
-  O: 'ও',
   i: 'ই',
   I: 'ঈ',
   ee: 'ঈ',
@@ -67,13 +69,19 @@ export const AVRO_INDEPENDENT_VOWELS: Record<string, string> = {
   E: 'এ',
   oi: 'ঐ',
   OI: 'ঐ',
+  Oi: 'ঐ',
+  O: 'ও',
+  w: 'ও',
   ou: 'ঔ',
   OU: 'ঔ',
+  Ou: 'ঔ',
   rri: 'ঋ',
-  RRI: 'ঋ'
+  RRI: 'ঋ',
+  ri: 'ঋ',
+  RI: 'ঋ'
 };
 
-// Vowel signs (Kar) attached to consonants
+// Vowel signs (Kar) attached to preceding consonants
 export const AVRO_KAR_MAP: Record<string, string> = {
   a: 'া',
   aa: 'া',
@@ -87,123 +95,61 @@ export const AVRO_KAR_MAP: Record<string, string> = {
   E: 'ে',
   oi: 'ৈ',
   OI: 'ৈ',
+  Oi: 'ৈ',
   o: 'ো',
   O: 'ো',
   ou: 'ৌ',
   OU: 'ৌ',
-  rri: 'ৃ'
+  Ou: 'ৌ',
+  rri: 'ৃ',
+  RRI: 'ৃ',
+  ri: 'ৃ'
 };
 
-// Common Avro conjunct patterns
+// Comprehensive Avro conjunct patterns (sorted by key length during matching)
 export const AVRO_CONJUNCTS: Record<string, string> = {
-  kkh: 'ক্ষ',
-  kSh: 'ক্ষ',
-  kkhN: 'ক্ষ্ণ',
+  // 4-character combinations
   kkhm: 'ক্ষ্ম',
   kkhy: 'ক্ষ্য',
   kkhw: 'ক্ষ্ব',
+  kkhN: 'ক্ষ্ণ',
+  nggh: 'ঙ্ঘ',
+  ngkh: 'ঙ্খ',
+  nchh: 'ঞ্ছ',
+  shchch: 'শ্ছ',
+  shch: 'শ্চ',
+
+  // 3-character combinations
+  kkh: 'ক্ষ',
+  kSh: 'ক্ষ',
   jn: 'জ্ঞ',
   jN: 'জ্ঞ',
   ngk: 'ঙ্ক',
-  ngkh: 'ঙ্খ',
   ngg: 'ঙ্গ',
-  nggh: 'ঙ্ঘ',
   nch: 'ঞ্চ',
-  nchh: 'ঞ্ছ',
-  nj: 'ঞ্জ',
   njh: 'ঞ্ঝ',
-  NT: 'ণ্ট',
+  nj: 'ঞ্জ',
   NTh: 'ণ্ঠ',
-  ND: 'ণ্ড',
   NDh: 'ণ্ঢ',
-  NN: 'ণ্ণ',
-  kt: 'ক্ত',
-  kw: 'ক্ব',
-  ky: 'ক্য',
-  kr: 'ক্র',
-  kl: 'ক্ল',
-  ks: 'ক্স',
-  gd: 'গ্দ',
-  gdh: 'গ্ধ',
-  gn: 'গ্ন',
-  gb: 'গ্ব',
-  gm: 'গ্ম',
-  gy: 'গ্য',
-  gr: 'গ্র',
-  gl: 'গ্ল',
-  ghn: 'ঘ্ন',
-  ghy: 'ঘ্য',
-  ghr: 'ঘ্র',
-  chch: 'চ্চ',
-  chchh: 'চ্ছ',
-  chw: 'চ্ব',
-  chy: 'চ্য',
-  jj: 'জ্জ',
-  jjh: 'জ্ঝ',
-  jw: 'জ্ব',
-  jy: 'জ্য',
-  jr: 'জ্র',
-  TT: 'ট্ট',
-  Tw: 'ট্ব',
-  Ty: 'ট্য',
-  Tr: 'ট্র',
-  DD: 'ড্ড',
-  Dy: 'ড্য',
-  Dr: 'ড্র',
-  nt: 'ন্ত',
   nth: 'ন্থ',
-  nd: 'ন্দ',
   ndh: 'ন্ধ',
-  nn: 'ন্ন',
-  nw: 'ন্ব',
-  nm: 'ন্ম',
-  ny: 'ন্য',
-  pt: 'প্ত',
-  pn: 'প্ন',
-  pp: 'প্প',
-  pl: 'প্ল',
-  ps: 'প্স',
-  py: 'প্য',
-  pr: 'প্র',
-  bd: 'ব্দ',
   bdh: 'ব্ধ',
-  bb: 'ব্ব',
-  bl: 'ব্ল',
-  by: 'ব্য',
-  br: 'ব্র',
   bht: 'ভ্ত',
   bhy: 'ভ্য',
   bhr: 'ভ্র',
-  mn: 'ম্ন',
-  mp: 'ম্প',
+  bhw: 'ভ্ব',
   mph: 'ম্ফ',
-  mb: 'ম্ব',
   mbh: 'ম্ভ',
-  mm: 'ম্ম',
-  ml: 'ম্ল',
-  my: 'ম্য',
-  mr: 'ম্র',
-  st: 'স্ত',
   sth: 'স্থ',
-  sn: 'স্ন',
-  sp: 'স্প',
   sph: 'স্ফ',
-  sb: 'স্ব',
-  sm: 'স্ম',
-  sy: 'স্য',
-  sr: 'স্র',
-  sl: 'স্ল',
-  sk: 'স্ক',
   skh: 'স্খ',
-  shch: 'শ্চ',
-  shchch: 'শ্ছ',
   shn: 'শ্ন',
-  shw: 'শ্ব',
   shm: 'শ্ম',
-  shy: 'শ্য',
   shr: 'শ্র',
   shl: 'শ্ল',
-  Shk: 'ষ্ক',
+  shw: 'শ্ব',
+  shy: 'শ্য',
+  Shk: 'স্ক',
   Shkh: 'ষ্খ',
   ShT: 'ষ্ট',
   ShTh: 'ষ্ঠ',
@@ -212,26 +158,118 @@ export const AVRO_CONJUNCTS: Record<string, string> = {
   Shph: 'ষ্ফ',
   Shm: 'ষ্ম',
   Shy: 'ষ্য',
+  Shw: 'ষ্ব',
+  gdh: 'গ্ধ',
+  ghn: 'ঘ্ন',
+  ghr: 'ঘ্র',
+  ghy: 'ঘ্য',
+  chchh: 'চ্ছ',
+  jjh: 'জ্ঝ',
+  chch: 'চ্চ',
+
+  // 2-character combinations
+  kt: 'ক্ত',
+  kr: 'ক্র',
+  kl: 'ক্ল',
+  kw: 'ক্ব',
+  ky: 'ক্য',
+  ks: 'ক্স',
+  gd: 'গ্দ',
+  gn: 'গ্ন',
+  gb: 'গ্ব',
+  gm: 'গ্ম',
+  gr: 'গ্র',
+  gl: 'গ্ল',
+  gw: 'গ্ব',
+  gy: 'গ্য',
+  chw: 'চ্ব',
+  chy: 'চ্য',
+  jj: 'জ্জ',
+  jw: 'জ্ব',
+  jy: 'জ্য',
+  jr: 'জ্র',
+  TT: 'ট্ট',
+  Tr: 'ট্র',
+  Tw: 'ট্ব',
+  Ty: 'ট্য',
+  DD: 'ড্ড',
+  Dr: 'ড্র',
+  Dw: 'ড্ব',
+  Dy: 'ড্য',
+  NT: 'ণ্ট',
+  ND: 'ণ্ড',
+  NN: 'ণ্ণ',
+  tt: 'ত্ত',
+  tr: 'ত্র',
+  tw: 'ত্ব',
+  ty: 'ত্য',
+  tm: 'ত্ম',
+  dd: 'দ্দ',
+  ddh: 'দ্ধ',
+  dr: 'দ্র',
+  dw: 'দ্ব',
+  dy: 'দ্য',
+  dm: 'দ্ম',
+  nt: 'ন্ত',
+  nd: 'ন্দ',
+  nn: 'ন্ন',
+  nm: 'ন্ম',
+  ny: 'ন্য',
+  nw: 'ন্ব',
+  pt: 'প্ত',
+  pn: 'প্ন',
+  pp: 'প্প',
+  pl: 'প্ল',
+  pr: 'প্র',
+  ps: 'প্স',
+  py: 'প্য',
+  pw: 'প্ব',
+  bd: 'ব্দ',
+  bb: 'ব্ব',
+  bl: 'ব্ল',
+  br: 'ব্র',
+  by: 'ব্য',
+  bw: '্ব',
+  mn: 'ম্ন',
+  mp: 'ম্প',
+  mb: 'ম্ব',
+  mm: 'ম্ম',
+  ml: 'ম্ল',
+  mr: 'ম্র',
+  my: 'ম্য',
+  mw: 'ম্ব',
+  st: 'স্ত',
+  sn: 'স্ন',
+  sp: 'স্প',
+  sm: 'স্ম',
+  sy: 'স্য',
+  sr: 'স্র',
+  sl: 'স্ল',
+  sk: 'স্ক',
+  sw: 'স্ব',
   hn: 'হ্ন',
   hN: 'হ্ণ',
-  hb: 'হ্ব',
   hm: 'হ্ম',
-  hy: 'হ্য',
+  hl: 'হ্ল',
   hr: 'হ্র',
-  hl: 'হ্ল'
+  hy: 'হ্য',
+  hw: 'হ্ব'
 };
 
-// Special modifiers
+// Special Avro modifiers and punctuations
 export const AVRO_SPECIAL_MAP: Record<string, string> = {
   ':': 'ঃ',
+  H: 'ঃ',
   '^': 'ঁ',
   '.': '।',
   '..': '্',
   ',,': '্',
+  ',': '্',
   '`': '', // vowel breaker
   "t`": 'ৎ',
   't,,': 'ৎ',
-  '$': '৳'
+  '$': '৳',
+  '|': '।'
 };
 
 /**
@@ -246,7 +284,7 @@ export function transliterateAvro(input: string): string {
   let prevWasConsonant = false;
 
   while (i < len) {
-    // Check 4-character combinations
+    // 1. Check 4-character combinations
     const four = input.substring(i, i + 4);
     if (AVRO_CONJUNCTS[four]) {
       output += AVRO_CONJUNCTS[four];
@@ -255,7 +293,7 @@ export function transliterateAvro(input: string): string {
       continue;
     }
 
-    // Check 3-character combinations
+    // 2. Check 3-character combinations
     const three = input.substring(i, i + 3);
     if (AVRO_CONJUNCTS[three]) {
       output += AVRO_CONJUNCTS[three];
@@ -270,21 +308,16 @@ export function transliterateAvro(input: string): string {
       continue;
     }
 
-    // Check 2-character combinations
+    // 3. Check 2-character combinations
     const two = input.substring(i, i + 2);
-    if (AVRO_CONJUNCTS[two]) {
-      output += AVRO_CONJUNCTS[two];
-      i += 2;
-      prevWasConsonant = true;
-      continue;
-    }
     if (AVRO_SPECIAL_MAP[two] !== undefined) {
       output += AVRO_SPECIAL_MAP[two];
       i += 2;
+      prevWasConsonant = false;
       continue;
     }
-    if (AVRO_CONSONANT_MAP[two]) {
-      output += AVRO_CONSONANT_MAP[two];
+    if (AVRO_CONJUNCTS[two]) {
+      output += AVRO_CONJUNCTS[two];
       i += 2;
       prevWasConsonant = true;
       continue;
@@ -301,8 +334,14 @@ export function transliterateAvro(input: string): string {
       prevWasConsonant = false;
       continue;
     }
+    if (AVRO_CONSONANT_MAP[two]) {
+      output += AVRO_CONSONANT_MAP[two];
+      i += 2;
+      prevWasConsonant = true;
+      continue;
+    }
 
-    // Single character
+    // 4. Single character
     const one = input.charAt(i);
 
     if (one === ' ') {
@@ -314,14 +353,14 @@ export function transliterateAvro(input: string): string {
 
     if (AVRO_SPECIAL_MAP[one] !== undefined) {
       output += AVRO_SPECIAL_MAP[one];
+      prevWasConsonant = false;
       i++;
       continue;
     }
 
     if (AVRO_KAR_MAP[one] && prevWasConsonant) {
-      // If vowel 'o' is typed after a consonant in Avro (inherent vowel), it leaves consonant as is
+      // Inherent vowel logic: if 'o' is typed after consonant, leave as inherent unless capital O
       if (one === 'o') {
-        // inherent vowel or o-kar
         output += 'ো';
       } else {
         output += AVRO_KAR_MAP[one];
@@ -351,95 +390,172 @@ export function transliterateAvro(input: string): string {
     i++;
   }
 
-  return output;
+  return canonicalizeBanglaUnicode(output);
 }
 
 /**
- * Maps a single keystroke or small buffer in Avro mode to either:
- * 1. Direct Bangla translation
- * 2. Next expected keystroke match
+ * Maps a single keystroke or small buffer in Avro mode to determine if it completes
+ * the expected Bangla token or grapheme.
  */
 export function matchAvroKeystroke(
   typedKey: string,
   expectedChar: string,
-  buffer: string = ''
+  buffer: string = '',
+  targetGrapheme?: string
 ): {
   isMatch: boolean;
   producedBangla: string;
   newBuffer: string;
   consumed: boolean;
+  isPrefix: boolean;
 } {
+  const expectedNorm = canonicalizeBanglaUnicode(expectedChar);
+  const targetNorm = targetGrapheme ? canonicalizeBanglaUnicode(targetGrapheme) : expectedNorm;
   const combined = buffer + typedKey;
-  const transliterated = transliterateAvro(combined);
+  const transliteratedCombined = canonicalizeBanglaUnicode(transliterateAvro(combined));
 
-  // Direct match with the expected character
-  if (transliterated.endsWith(expectedChar) || transliterated === expectedChar) {
+  // 1. Direct match with combined transliteration
+  if (
+    transliteratedCombined === expectedNorm ||
+    transliteratedCombined === targetNorm ||
+    transliteratedCombined.endsWith(expectedNorm)
+  ) {
     return {
       isMatch: true,
-      producedBangla: transliterated,
+      producedBangla: transliteratedCombined,
       newBuffer: '',
-      consumed: true
+      consumed: true,
+      isPrefix: false
     };
   }
 
-  // Also check individual letter mappings (e.g. k -> ক, a -> া / আ)
-  const singleTransliterated = transliterateAvro(typedKey);
-  if (singleTransliterated === expectedChar) {
+  // 2. Direct single key transliteration match
+  const singleTransliterated = canonicalizeBanglaUnicode(transliterateAvro(typedKey));
+  if (singleTransliterated === expectedNorm || singleTransliterated === targetNorm) {
     return {
       isMatch: true,
       producedBangla: singleTransliterated,
       newBuffer: '',
-      consumed: true
+      consumed: true,
+      isPrefix: false
     };
   }
 
-  // Check if expectedChar is a Kar (vowel diacritic) and user pressed the vowel key
-  const karForVowel = AVRO_KAR_MAP[typedKey.toLowerCase()];
-  if (karForVowel === expectedChar) {
+  // 3. Check Vowel Signs (Kar) map for combined and single key
+  const karCombined = AVRO_KAR_MAP[combined] || AVRO_KAR_MAP[combined.toLowerCase()];
+  if (karCombined === expectedNorm) {
     return {
       isMatch: true,
-      producedBangla: karForVowel,
+      producedBangla: karCombined,
       newBuffer: '',
-      consumed: true
+      consumed: true,
+      isPrefix: false
     };
   }
 
-  // Check independent vowel
-  const independentVowel = AVRO_INDEPENDENT_VOWELS[typedKey];
-  if (independentVowel === expectedChar) {
+  const karSingle = AVRO_KAR_MAP[typedKey] || AVRO_KAR_MAP[typedKey.toLowerCase()];
+  if (karSingle === expectedNorm && buffer === '') {
     return {
       isMatch: true,
-      producedBangla: independentVowel,
+      producedBangla: karSingle,
       newBuffer: '',
-      consumed: true
+      consumed: true,
+      isPrefix: false
     };
   }
 
-  // Check consonant match
-  const consonant = AVRO_CONSONANT_MAP[typedKey];
-  if (consonant === expectedChar) {
+  // 4. Check Independent Vowels
+  const indVowelCombined = AVRO_INDEPENDENT_VOWELS[combined];
+  if (indVowelCombined === expectedNorm || indVowelCombined === targetNorm) {
     return {
       isMatch: true,
-      producedBangla: consonant,
+      producedBangla: indVowelCombined,
       newBuffer: '',
-      consumed: true
+      consumed: true,
+      isPrefix: false
     };
   }
 
-  // Check if this could be an intermediate prefix (e.g. typed 'k', expected 'খ' (kh))
-  if (typedKey.length === 1 && 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.includes(typedKey)) {
+  const indVowelSingle = AVRO_INDEPENDENT_VOWELS[typedKey];
+  if ((indVowelSingle === expectedNorm || indVowelSingle === targetNorm) && buffer === '') {
     return {
-      isMatch: false,
-      producedBangla: transliterated,
-      newBuffer: combined.length > 5 ? typedKey : combined,
-      consumed: false
+      isMatch: true,
+      producedBangla: indVowelSingle,
+      newBuffer: '',
+      consumed: true,
+      isPrefix: false
     };
   }
 
+  // 5. Check Consonants & Conjuncts
+  const conjCombined = AVRO_CONJUNCTS[combined] || AVRO_CONSONANT_MAP[combined];
+  if (conjCombined === expectedNorm || conjCombined === targetNorm) {
+    return {
+      isMatch: true,
+      producedBangla: conjCombined,
+      newBuffer: '',
+      consumed: true,
+      isPrefix: false
+    };
+  }
+
+  // 6. Check Special Characters
+  const specialCombined = AVRO_SPECIAL_MAP[combined];
+  if (specialCombined === expectedNorm || specialCombined === targetNorm) {
+    return {
+      isMatch: true,
+      producedBangla: specialCombined,
+      newBuffer: '',
+      consumed: true,
+      isPrefix: false
+    };
+  }
+
+  // 7. Check if combined is a valid prefix towards expectedChar or targetGrapheme
+  const isLetterOrPunct = /^[a-zA-Z0-9,.:`^$|-]$/.test(typedKey);
+  if (isLetterOrPunct && combined.length < 6) {
+    // Check if any conjunct starts with combined
+    const matchingConj = Object.keys(AVRO_CONJUNCTS).some(
+      (k) => k.startsWith(combined) && (AVRO_CONJUNCTS[k] === expectedNorm || AVRO_CONJUNCTS[k] === targetNorm)
+    );
+
+    // Check if any consonant / kar sequence starts with combined
+    const matchingKar = Object.keys(AVRO_KAR_MAP).some(
+      (k) => k.startsWith(combined) && AVRO_KAR_MAP[k] === expectedNorm
+    );
+
+    const matchingInd = Object.keys(AVRO_INDEPENDENT_VOWELS).some(
+      (k) => k.startsWith(combined) && AVRO_INDEPENDENT_VOWELS[k] === expectedNorm
+    );
+
+    if (matchingConj || matchingKar || matchingInd) {
+      return {
+        isMatch: false,
+        producedBangla: transliteratedCombined,
+        newBuffer: combined,
+        consumed: false,
+        isPrefix: true
+      };
+    }
+
+    // Generic multi-key buffering for roman alphabet letters (e.g. k -> kh for খ, s -> st for স্ত)
+    if (/^[a-zA-Z]$/.test(typedKey)) {
+      return {
+        isMatch: false,
+        producedBangla: transliteratedCombined,
+        newBuffer: combined,
+        consumed: false,
+        isPrefix: true
+      };
+    }
+  }
+
+  // 8. No match and not a valid prefix -> mistake
   return {
     isMatch: false,
-    producedBangla: transliterated,
+    producedBangla: singleTransliterated || typedKey,
     newBuffer: '',
-    consumed: false
+    consumed: false,
+    isPrefix: false
   };
 }

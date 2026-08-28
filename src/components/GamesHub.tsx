@@ -227,21 +227,24 @@ export const GamesHub: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col gap-8">
       {/* Header */}
-      <div className="border-b border-[#1A1A1A]/10 pb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="border-b-2 border-[#141210] pb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <span className="text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-[#1A1A1A]/50 mb-1 block">
-            GAMIFIED ARCADE & COMBAT
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-serif-editorial font-bold text-[#1A1A1A] tracking-tight">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Gamepad2 className="w-4 h-4 text-[#8B0000]" />
+            <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-[#8B0000]">
+              GAMIFIED ARCADE & COMBAT &bull; বাংলা আর্কেড
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-tiro font-bold text-[#141210] tracking-tight">
             বাংলা টাইপিং আর্কেড গেমস
           </h1>
-          <p className="text-sm font-bengali text-[#1A1A1A]/70 mt-1">
-            বোরিং ড্রিল বাদ দিয়ে গেমের উত্তেজনায় আঙুলের পেশিশক্তি ও গতি বাড়ান।
+          <p className="text-sm font-tiro text-[#141210]/80 mt-1 max-w-2xl leading-relaxed">
+            একঘেয়ে ড্রিল বাদ দিয়ে রিয়েলটাইম আর্কেড চ্যালেঞ্জে আঙুলের ক্ষিপ্রতা ও পেশিশক্তি বাড়ান।
           </p>
         </div>
 
         {/* Game Selector Tabs */}
-        <div className="flex items-center gap-1.5 bg-[#FFFFFF] p-1 border border-[#1A1A1A]/15 text-xs font-sans font-bold">
+        <div className="flex items-center gap-1.5 bg-[#FCFBF8] p-1 border-2 border-[#141210]/30 text-xs font-tiro font-bold rounded-xs shadow-2xs">
           {[
             { id: 'falling-letters', label: '১. ঝরে পড়া বর্ণ' },
             { id: 'boss-fight', label: '২. যুক্তাক্ষর বস ফাইট' }
@@ -253,10 +256,10 @@ export const GamesHub: React.FC = () => {
                 setIsPlaying(false);
                 setGameOver(false);
               }}
-              className={`px-3 py-1.5 transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 transition-colors cursor-pointer rounded-xs ${
                 selectedGame === tab.id
-                  ? 'bg-[#1A1A1A] text-[#F2F0ED]'
-                  : 'text-[#1A1A1A]/70 hover:bg-[#F2F0ED]'
+                  ? 'bg-[#141210] text-[#F5F2EB]'
+                  : 'text-[#141210]/70 hover:bg-[#EDE9DF]'
               }`}
             >
               {tab.label}
@@ -266,18 +269,18 @@ export const GamesHub: React.FC = () => {
       </div>
 
       {/* Main Game Stage */}
-      <div className="bg-[#FFFFFF] border border-[#1A1A1A]/15 shadow-sm p-6 sm:p-8 flex flex-col gap-6">
+      <div className="bg-[#FCFBF8] border-2 border-[#141210]/30 shadow-2xs p-6 sm:p-8 flex flex-col gap-6 rounded-xs">
         {/* Game HUD */}
-        <div className="flex items-center justify-between border-b border-[#1A1A1A]/10 pb-4">
+        <div className="flex items-center justify-between border-b border-[#141210]/15 pb-4">
           <div className="flex items-center gap-6 font-mono text-sm">
             <div>
-              <span className="text-[9px] uppercase font-sans font-bold text-[#1A1A1A]/50 block">
+              <span className="text-[9px] uppercase font-bold text-[#141210]/60 block">
                 SCORE
               </span>
-              <span className="text-2xl font-bold text-[#1A1A1A]">{score}</span>
+              <span className="text-2xl font-bold text-[#141210]">{score}</span>
             </div>
             <div>
-              <span className="text-[9px] uppercase font-sans font-bold text-amber-800 block">
+              <span className="text-[9px] uppercase font-bold text-amber-800 block">
                 COMBO
               </span>
               <span className="text-2xl font-bold text-amber-900">{combo}x</span>
@@ -289,7 +292,7 @@ export const GamesHub: React.FC = () => {
               <Heart
                 key={heart}
                 className={`w-5 h-5 ${
-                  heart <= lives ? 'text-rose-600 fill-rose-500' : 'text-gray-300'
+                  heart <= lives ? 'text-[#8B0000] fill-[#8B0000]' : 'text-[#141210]/20'
                 }`}
               />
             ))}
@@ -298,22 +301,22 @@ export const GamesHub: React.FC = () => {
 
         {/* GAME 1: Falling Letters Canvas */}
         {selectedGame === 'falling-letters' && (
-          <div className="relative w-full h-[400px] bg-[#F2F0ED] border border-[#1A1A1A]/15 overflow-hidden flex flex-col justify-between p-4">
+          <div className="relative w-full h-[400px] bg-[#EDE9DF]/50 border-2 border-[#141210]/20 overflow-hidden flex flex-col justify-between p-4 rounded-xs">
             {!isPlaying && !gameOver && (
-              <div className="absolute inset-0 bg-[#FFFFFF]/90 backdrop-blur-xs flex flex-col items-center justify-center gap-4 z-10 p-6 text-center">
-                <Gamepad2 className="w-12 h-12 text-[#1A1A1A]" />
-                <h3 className="text-2xl font-serif-editorial font-bold text-[#1A1A1A]">
+              <div className="absolute inset-0 bg-[#FCFBF8]/95 backdrop-blur-xs flex flex-col items-center justify-center gap-4 z-10 p-6 text-center">
+                <Gamepad2 className="w-12 h-12 text-[#8B0000]" />
+                <h3 className="text-2xl font-tiro font-bold text-[#141210]">
                   ঝরে পড়া বর্ণ (Falling Letters)
                 </h3>
-                <p className="text-xs font-bengali text-[#1A1A1A]/70 max-w-sm">
+                <p className="text-xs font-tiro text-[#141210]/75 max-w-sm">
                   ওপর থেকে বর্ণ নিচে পড়ার আগেই কীবোর্ডে সঠিক কী চাপুন। ভুল চাপলে বা বর্ণ নিচে পড়লে হার্ট কমবে।
                 </p>
                 <button
                   onClick={startGame}
-                  className="px-6 py-3 bg-[#1A1A1A] text-[#F2F0ED] text-xs font-sans font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-6 py-3 bg-[#141210] text-[#F5F2EB] text-xs font-tiro font-bold uppercase tracking-wider hover:bg-[#8B0000] transition-all flex items-center gap-2 cursor-pointer shadow-xs rounded-xs"
                 >
                   <Play className="w-4 h-4" />
-                  <span>গেম শুরু করি (START)</span>
+                  <span>গেম শুরু করুন (START)</span>
                 </button>
               </div>
             )}
@@ -325,7 +328,7 @@ export const GamesHub: React.FC = () => {
                   {fallingLetters.map((item) => (
                     <div
                       key={item.id}
-                      className="absolute px-3 py-1.5 bg-[#FFFFFF] border border-[#1A1A1A] shadow-md font-bengali text-2xl font-bold text-[#1A1A1A] transition-transform duration-75"
+                      className="absolute px-3 py-1.5 bg-[#FFFFFF] border-2 border-[#141210] shadow-md font-tiro text-2xl font-bold text-[#141210] rounded-xs transition-transform duration-75"
                       style={{
                         left: `${item.x}%`,
                         top: `${item.y}%`
@@ -337,8 +340,8 @@ export const GamesHub: React.FC = () => {
                 </div>
 
                 {/* Ground Danger Line */}
-                <div className="absolute bottom-4 left-0 right-0 border-b-2 border-dashed border-rose-400 flex justify-center">
-                  <span className="bg-rose-100 text-rose-800 text-[9px] font-mono uppercase px-2 py-0.5 font-bold">
+                <div className="absolute bottom-4 left-0 right-0 border-b-2 border-dashed border-[#8B0000]/60 flex justify-center">
+                  <span className="bg-[#8B0000]/10 text-[#8B0000] text-[9px] font-mono uppercase px-2 py-0.5 font-bold rounded-xs">
                     DANGER THRESHOLD
                   </span>
                 </div>
@@ -346,20 +349,20 @@ export const GamesHub: React.FC = () => {
             )}
 
             {gameOver && (
-              <div className="absolute inset-0 bg-[#FFFFFF]/95 flex flex-col items-center justify-center gap-4 z-10 text-center p-6">
+              <div className="absolute inset-0 bg-[#FCFBF8]/95 flex flex-col items-center justify-center gap-4 z-10 text-center p-6">
                 <Trophy className="w-12 h-12 text-amber-600" />
-                <h3 className="text-3xl font-serif-editorial font-bold text-[#1A1A1A]">
+                <h3 className="text-3xl font-tiro font-bold text-[#141210]">
                   গেম সমাপ্ত!
                 </h3>
-                <div className="font-mono text-xl font-bold text-[#1A1A1A]">
+                <div className="font-mono text-xl font-bold text-[#141210]">
                   সর্বমোট স্কোর: {score} XP
                 </div>
                 <button
                   onClick={startGame}
-                  className="px-6 py-2.5 bg-[#1A1A1A] text-[#F2F0ED] text-xs font-sans font-bold uppercase tracking-wider hover:bg-black transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-6 py-2.5 bg-[#141210] text-[#F5F2EB] text-xs font-tiro font-bold uppercase tracking-wider hover:bg-[#8B0000] transition-all flex items-center gap-2 cursor-pointer rounded-xs"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  <span>আবার খেলি (Play Again)</span>
+                  <span>আবার খেলুন (Play Again)</span>
                 </button>
               </div>
             )}
@@ -368,22 +371,22 @@ export const GamesHub: React.FC = () => {
 
         {/* GAME 2: Juktakkhor Boss Fight */}
         {selectedGame === 'boss-fight' && (
-          <div className="relative w-full min-h-[400px] bg-[#F2F0ED] border border-[#1A1A1A]/15 p-6 sm:p-10 flex flex-col items-center justify-between gap-6">
+          <div className="relative w-full min-h-[400px] bg-[#EDE9DF]/50 border-2 border-[#141210]/20 p-6 sm:p-10 flex flex-col items-center justify-between gap-6 rounded-xs">
             {!isPlaying && !gameOver && (
-              <div className="absolute inset-0 bg-[#FFFFFF]/90 backdrop-blur-xs flex flex-col items-center justify-center gap-4 z-10 p-6 text-center">
-                <Shield className="w-12 h-12 text-[#1A1A1A]" />
-                <h3 className="text-2xl font-serif-editorial font-bold text-[#1A1A1A]">
+              <div className="absolute inset-0 bg-[#FCFBF8]/95 backdrop-blur-xs flex flex-col items-center justify-center gap-4 z-10 p-6 text-center">
+                <Shield className="w-12 h-12 text-[#8B0000]" />
+                <h3 className="text-2xl font-tiro font-bold text-[#141210]">
                   যুক্তাক্ষর বস ফাইট (Boss Combat)
                 </h3>
-                <p className="text-xs font-bengali text-[#1A1A1A]/70 max-w-sm">
+                <p className="text-xs font-tiro text-[#141210]/75 max-w-sm">
                   বস মনস্টার জটিল যুক্তাক্ষর ছুড়ছে। সঠিক যুক্তবর্ণ দ্রুত টাইপ করে বসকে পরাস্ত করুন!
                 </p>
                 <button
                   onClick={startGame}
-                  className="px-6 py-3 bg-[#1A1A1A] text-[#F2F0ED] text-xs font-sans font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-6 py-3 bg-[#141210] text-[#F5F2EB] text-xs font-tiro font-bold uppercase tracking-wider hover:bg-[#8B0000] transition-all flex items-center gap-2 cursor-pointer shadow-xs rounded-xs"
                 >
                   <Play className="w-4 h-4" />
-                  <span>যুদ্ধ শুরু করি (START COMBAT)</span>
+                  <span>যুদ্ধ শুরু করুন (START COMBAT)</span>
                 </button>
               </div>
             )}
@@ -393,12 +396,12 @@ export const GamesHub: React.FC = () => {
                 {/* Boss Monster Health Bar */}
                 <div className="w-full max-w-md flex flex-col gap-1.5">
                   <div className="flex justify-between text-xs font-mono font-bold">
-                    <span className="text-rose-800 uppercase">LORD JUKTAKKHOR (BOSS)</span>
-                    <span className="text-[#1A1A1A]">{bossHp} / 500 HP</span>
+                    <span className="text-[#8B0000] uppercase">LORD JUKTAKKHOR (BOSS)</span>
+                    <span className="text-[#141210]">{bossHp} / 500 HP</span>
                   </div>
-                  <div className="w-full h-3 bg-[#D9D7D2] border border-[#1A1A1A]/20">
+                  <div className="w-full h-3 bg-[#EDE9DF] border border-[#141210]/30 rounded-xs overflow-hidden">
                     <div
-                      className="h-full bg-rose-600 transition-all duration-200"
+                      className="h-full bg-[#8B0000] transition-all duration-200"
                       style={{ width: `${(bossHp / 500) * 100}%` }}
                     ></div>
                   </div>
@@ -406,18 +409,18 @@ export const GamesHub: React.FC = () => {
 
                 {/* Boss Glyph Spotlight */}
                 <div
-                  className={`w-32 h-32 bg-[#FFFFFF] border-2 border-[#1A1A1A] shadow-xl flex items-center justify-center transition-all ${
-                    bossAttackAnim ? 'scale-90 bg-rose-100 border-rose-600' : 'scale-100'
+                  className={`w-32 h-32 bg-[#FFFFFF] border-2 border-[#141210] shadow-xl flex items-center justify-center transition-all rounded-xs ${
+                    bossAttackAnim ? 'scale-90 bg-[#8B0000]/10 border-[#8B0000]' : 'scale-100'
                   }`}
                 >
-                  <span className="font-bengali font-bold text-6xl text-[#1A1A1A]">
+                  <span className="font-tiro font-bold text-6xl text-[#141210]">
                     {currentBossGlyph}
                   </span>
                 </div>
 
                 {/* Input Combat Box */}
                 <div className="w-full max-w-sm flex flex-col gap-2">
-                  <span className="text-[10px] font-sans font-bold tracking-widest uppercase text-center text-[#1A1A1A]/60">
+                  <span className="text-[10px] font-tiro font-bold tracking-wider uppercase text-center text-[#141210]/70">
                     টাইপ করে আক্রমণ করুন:
                   </span>
                   <input
@@ -425,24 +428,24 @@ export const GamesHub: React.FC = () => {
                     autoFocus
                     placeholder={`টাইপ করুন '${currentBossGlyph}'...`}
                     onChange={handleBossInput}
-                    className="w-full bg-[#FFFFFF] border-2 border-[#1A1A1A] p-3 text-center text-xl font-bengali font-bold focus:outline-none"
+                    className="w-full bg-[#FFFFFF] border-2 border-[#141210] p-3 text-center text-xl font-tiro font-bold focus:outline-none rounded-xs shadow-inner"
                   />
                 </div>
               </div>
             )}
 
             {gameOver && (
-              <div className="absolute inset-0 bg-[#FFFFFF]/95 flex flex-col items-center justify-center gap-4 z-10 text-center p-6">
+              <div className="absolute inset-0 bg-[#FCFBF8]/95 flex flex-col items-center justify-center gap-4 z-10 text-center p-6">
                 <Trophy className="w-12 h-12 text-amber-600" />
-                <h3 className="text-3xl font-serif-editorial font-bold text-[#1A1A1A]">
+                <h3 className="text-3xl font-tiro font-bold text-[#141210]">
                   {bossHp <= 0 ? 'বস সম্পূর্ণ পরাজিত!' : 'যুদ্ধ শেষ!'}
                 </h3>
-                <div className="font-mono text-xl font-bold text-[#1A1A1A]">
+                <div className="font-mono text-xl font-bold text-[#141210]">
                   অর্জিত পয়েন্ট: {score} XP
                 </div>
                 <button
                   onClick={startGame}
-                  className="px-6 py-2.5 bg-[#1A1A1A] text-[#F2F0ED] text-xs font-sans font-bold uppercase tracking-wider hover:bg-black transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-6 py-2.5 bg-[#141210] text-[#F5F2EB] text-xs font-tiro font-bold uppercase tracking-wider hover:bg-[#8B0000] transition-all flex items-center gap-2 cursor-pointer rounded-xs"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>পুনরায় যুদ্ধ (Rematch)</span>

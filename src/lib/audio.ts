@@ -404,6 +404,10 @@ class SoundSynthesizer {
     osc.stop(now + 0.095);
   }
 
+  public playMistakeBeep() {
+    this.playError();
+  }
+
   public playComboChime(combo: number) {
     if (!this.isEnabled) return;
     const ctx = this.initContext();

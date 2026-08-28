@@ -32,28 +32,31 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
     id: 'speed-20',
     title: '২০ WPM মাইলফলক',
     titleEn: '20 WPM Milestone',
-    description: 'স্পিড টেস্টে ২০ ডব্লিউপিএম গতি অতিক্রম করেছো।',
+    description: 'স্পিড টেস্টে ২০ ডব্লিউপিএম গতি অতিক্রম করেছো (মডিউল ১ সম্পন্ন সাপেক্ষে)।',
     icon: 'Zap',
     category: 'speed',
-    xpBonus: 300
+    xpBonus: 300,
+    requiresModuleId: 'module-1'
   },
   {
     id: 'speed-35',
     title: '৩৫ WPM প্রো টাইপিস্ট',
     titleEn: '35 WPM Pro Typist',
-    description: '৩৫ ডব্লিউপিএম গতিতে প্রাতিষ্ঠানিক টাইপিং মান অর্জন।',
+    description: '৩৫ ডব্লিউপিএম গতিতে প্রাতিষ্ঠানিক টাইপিং মান অর্জন (মডিউল ১ সম্পন্ন সাপেক্ষে)।',
     icon: 'Flame',
     category: 'speed',
-    xpBonus: 500
+    xpBonus: 500,
+    requiresModuleId: 'module-1'
   },
   {
     id: 'speed-50',
     title: '৫০+ WPM স্পিড ডিমেনশন',
     titleEn: '50+ WPM Grandmaster',
-    description: '৫০ ডব্লিউপিএম গতিতে এলিট টাইপিস্টের মর্যাদা লাভ।',
+    description: '৫০ ডব্লিউপিএম গতিতে এলিট টাইপিস্টের মর্যাদা লাভ (মডিউল ১ সম্পন্ন সাপেক্ষে)।',
     icon: 'Crown',
     category: 'speed',
-    xpBonus: 1000
+    xpBonus: 1000,
+    requiresModuleId: 'module-1'
   },
   {
     id: 'juktakkhor-crusher',
