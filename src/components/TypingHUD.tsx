@@ -114,7 +114,7 @@ export const TypingHUD: React.FC<TypingHUDProps> = ({
         <div className="flex flex-col border-r border-[#141210]/15 pr-2">
           <div className="flex items-center gap-1 text-[10px] font-mono font-bold tracking-wider uppercase text-[#141210]/60">
             <Zap className="w-3 h-3 text-[#141210]" />
-            <span>NET WPM</span>
+            <span>গতি (WPM)</span>
           </div>
           <div className="text-2xl sm:text-3xl font-mono-numbers font-bold text-[#141210] leading-tight">
             {wpm}
@@ -176,7 +176,7 @@ export const TypingHUD: React.FC<TypingHUDProps> = ({
 
       {/* Target Text Display Broadsheet Article Box */}
       <div className="relative bg-[#FCFBF8] p-5 sm:p-7 border-2 border-[#141210]/30 shadow-2xs rounded-xs min-h-[140px] flex flex-col justify-center overflow-hidden">
-        {/* Idle Pause Overlay (Monkeytype Style) */}
+        {/* Idle Pause Overlay */}
         {isPaused && (
           <div
             onClick={onResume}
@@ -187,14 +187,14 @@ export const TypingHUD: React.FC<TypingHUDProps> = ({
                 <Pause className="w-4 h-4 fill-current" />
               </div>
               <span className="text-[10px] font-mono uppercase font-bold tracking-[0.25em] text-[#8B0000]">
-                টাইপিং সাময়িক বিরতি • PAUSED
+                টাইপিং সাময়িক বিরতি
               </span>
               <p className="text-base font-tiro font-bold text-[#141210] mt-0.5">
                 চালিয়ে যেতে যেকোনো কী চাপুন
               </p>
               <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#141210]/70 bg-[#EDE9DF] px-2.5 py-1 border border-[#141210]/20 rounded-xs mt-1">
                 <Play className="w-3 h-3 text-emerald-700 fill-emerald-700" />
-                <span>Press any key to resume</span>
+                <span>রিজিউম করতে চাপুন</span>
               </div>
             </div>
           </div>
@@ -205,7 +205,7 @@ export const TypingHUD: React.FC<TypingHUDProps> = ({
           <div className="flex items-center gap-2">
             <Newspaper className="w-3.5 h-3.5 text-[#141210]/60" />
             <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#141210]/60">
-              EDITORIAL TEXT STREAM &bull; টাইপিং অনুলিপি (২-লাইন ভিউ)
+              টাইপিং অনুলিপি (২-লাইন ভিউ)
             </span>
           </div>
           <span className="text-[10px] font-mono text-[#141210]/60 font-semibold">
@@ -335,7 +335,7 @@ export const TypingHUD: React.FC<TypingHUDProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#141210]/60 flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-[#8B0000]" />
-                  পরবর্তী কী (KEYSTROKE):
+                  পরবর্তী কী:
                 </span>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {keystrokeGuide.map((guide, i) => (
@@ -348,9 +348,9 @@ export const TypingHUD: React.FC<TypingHUDProps> = ({
                       }`}
                     >
                       {guide.key === ' ' ? (
-                        'স্পেসবার (SPACE)'
+                        'স্পেসবার (Space)'
                       ) : guide.shift ? (
-                        `SHIFT + ${guide.key.toUpperCase()}`
+                        `Shift + ${guide.key.toUpperCase()}`
                       ) : (
                         guide.key.toUpperCase()
                       )}

@@ -470,7 +470,7 @@ export const SpeedTestArena: React.FC = () => {
           <div className="flex items-center gap-2 mb-1">
             <Newspaper className="w-4 h-4 text-[#8B0000]" />
             <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-[#8B0000]">
-              OFFICIAL ASSESSMENT &bull; দ্রুততার লড়াই
+              অফিশিয়াল মূল্যায়ন &bull; দ্রুততার লড়াই
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-tiro font-bold text-[#141210] tracking-tight">
@@ -581,11 +581,11 @@ export const SpeedTestArena: React.FC = () => {
             <div className="flex items-center gap-3 flex-wrap">
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-[#FCFBF8] border border-[#141210]/30 rounded font-bold shadow-2xs">Tab ⇥</kbd>
-                <span>রিস্টার্ট (Restart)</span>
+                <span>রিস্টার্ট</span>
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-[#FCFBF8] border border-[#141210]/30 rounded font-bold shadow-2xs">Esc</kbd>
-                <span>বিরতি / রিজিউম (Pause)</span>
+                <span>বিরতি / রিজিউম</span>
               </span>
               {!isStarted && (
                 <span className="flex items-center gap-1">
@@ -595,7 +595,7 @@ export const SpeedTestArena: React.FC = () => {
               )}
             </div>
             <div className="text-[10px] text-[#141210]/60 italic font-tiro">
-              নিষ্ক্রিয় থাকলে স্বয়ংক্রিয় বিরতি সক্রিয় হবে (Monkeytype Style)
+              টাইপিং বন্ধ থাকলে স্বয়ংক্রিয় বিরতি চালু হবে
             </div>
           </div>
 
@@ -616,7 +616,7 @@ export const SpeedTestArena: React.FC = () => {
             <div className="flex flex-wrap items-start justify-between gap-4 border-b-2 border-[#141210]/20 pb-6">
               <div>
                 <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-[#8B0000] block mb-1">
-                  OFFICIAL BROADSHEET SPEED REPORT
+                  গতি ও মূল্যায়ন রিপোর্ট
                 </span>
                 <h2 className="text-3xl sm:text-4xl font-tiro font-bold text-[#141210]">
                   টেস্ট ফলাফল সারসংক্ষেপ
@@ -652,22 +652,22 @@ export const SpeedTestArena: React.FC = () => {
             {/* Core Metrics Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-[#EDE9DF] p-6 border-2 border-[#141210]/20 font-mono">
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-[#141210]/60">NET SPEED</span>
+                <span className="text-[10px] uppercase font-bold text-[#141210]/60">গতি (WPM)</span>
                 <span className="text-4xl font-bold text-[#141210]">{netWpm}</span>
                 <span className="text-[10px] font-tiro text-[#141210]/70">শব্দ প্রতি মিনিট</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-[#141210]/70">ACCURACY</span>
+                <span className="text-[10px] uppercase font-bold text-[#141210]/70">নির্ভুলতা (ACC)</span>
                 <span className="text-4xl font-bold text-[#141210]">{accuracy}%</span>
                 <span className="text-[10px] font-tiro text-[#141210]/70">নির্ভুলতার হার</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-[#141210]/60">GROSS CPM</span>
+                <span className="text-[10px] uppercase font-bold text-[#141210]/60">মোট গতি (CPM)</span>
                 <span className="text-4xl font-bold text-[#141210]">{cpm}</span>
                 <span className="text-[10px] font-tiro text-[#141210]/70">অক্ষর প্রতি মিনিট</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-[#8B0000]">ERRORS</span>
+                <span className="text-[10px] uppercase font-bold text-[#8B0000]">ভুল (Errors)</span>
                 <span className="text-4xl font-bold text-[#8B0000]">{errorCount}</span>
                 <span className="text-[10px] font-tiro text-[#141210]/70">ভুলের সংখ্যা</span>
               </div>
@@ -676,7 +676,7 @@ export const SpeedTestArena: React.FC = () => {
             {/* Official Newspaper Certificate */}
             <div className="mt-4 border-4 border-double border-[#141210] p-8 sm:p-12 bg-[#FCFBF8] relative shadow-lg">
               <div className="absolute top-6 right-6 border border-[#141210]/40 bg-[#EDE9DF] px-3 py-1 text-[9px] font-mono uppercase font-bold tracking-widest text-[#141210]/70">
-                VERIFIED ID: KL-{Date.now().toString().slice(-6)}
+                যাচাইকৃত আইডি: KL-{Date.now().toString().slice(-6)}
               </div>
 
               <div className="text-center flex flex-col items-center gap-3 font-tiro">
@@ -684,18 +684,18 @@ export const SpeedTestArena: React.FC = () => {
                   কী
                 </div>
                 <div className="text-[10px] font-mono font-bold tracking-[0.3em] uppercase text-[#8B0000]">
-                  KEY LIPI TOUCH TYPING ACADEMY &bull; কীলিপি টাইপিং একাডেমি
+                  কীলিপি স্পর্শ টাইপিং একাডেমি
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-tiro font-bold text-[#141210]">
                   সার্টিফিকেট অব টাইপিং কম্পিটেন্সি
                 </h3>
                 <p className="text-xs font-tiro text-[#141210]/80 max-w-lg leading-relaxed">
-                  এতদ্বারা প্রত্যায়ন করা যাইতেছে যে, উক্ত প্রার্থী বাংলা স্পর্শ টাইপিং পরীক্ষায় সন্তোষজনক দক্ষতা ও গতি প্রদর্শন করিয়াছেন:
+                  এতদ্বারা প্রত্যায়ন করা যাইতেছে যে, উক্ত শিক্ষার্থী বাংলা স্পর্শ টাইপিং পরীক্ষায় সন্তোষজনক দক্ষতা ও গতি প্রদর্শন করিয়াছেন:
                 </p>
 
                 <div className="my-3 border-y-2 border-[#141210]/20 py-4 w-full max-w-lg grid grid-cols-3 gap-2 font-mono text-center bg-[#EDE9DF]/40">
                   <div>
-                    <span className="text-[10px] font-tiro uppercase text-[#141210]/60 font-bold block">গতি</span>
+                    <span className="text-[10px] font-tiro uppercase text-[#141210]/60 font-bold block">গতি (WPM)</span>
                     <span className="text-2xl font-bold text-[#141210]">{netWpm} WPM</span>
                   </div>
                   <div>
@@ -709,7 +709,7 @@ export const SpeedTestArena: React.FC = () => {
                 </div>
 
                 <div className="text-[11px] font-tiro text-[#141210]/60 italic">
-                  তারিখ: {new Date().toLocaleDateString('bn-BD')} &bull; জাতীয় মানদণ্ড ও ইউনিকোড ভি১৫ প্রকাশনা
+                  তারিখ: {new Date().toLocaleDateString('bn-BD')} &bull; জাতীয় মানদণ্ড ও প্রমিত বাংলা বানানরীতি
                 </div>
               </div>
             </div>

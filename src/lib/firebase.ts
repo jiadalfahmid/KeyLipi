@@ -18,6 +18,9 @@ import {
   getAuth,
   signInAnonymously,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -158,8 +161,86 @@ export const signInWithGoogle = async (): Promise<FirebaseUser | null> => {
       throw new Error('ব্রাউজারে পপআপ ব্লক করা আছে। অনুগ্রহ করে পপআপ অনুমতি দিন এবং আবার চেষ্টা করুন।');
     }
 
+    if (errorCode === 'auth/unauthorized-domain') {
+      throw new Error('এই ডোমেনটি ফায়ারবেস অথেনটিকেশনে অনুমোদিত নয়। অনুগ্রহ করে Firebase Console > Authentication > Settings > Authorized domains এ গিয়ে ডোমেনটি যোগ করুন।');
+    }
+
     console.warn('Google Sign-In Notice:', err);
-    throw new Error('গুগল সাইন-ইন সম্পন্ন করা যায়নি। অনুগ্রহ করে ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।');
+    throw new Error(err?.message || 'গুগল সাইন-ইন সম্পন্ন করা যায়নি। অনুগ্রহ করে ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।');
+  }
+};
+
+/**
+ * Sign in with Email and Password
+ */
+export const signInWithEmail = async (
+  email: string,
+  pass: string
+): Promise<FirebaseUser | null> => {
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
+    return cred.user;
+  } catch (err: any) {
+    const code = err?.code || '';
+    if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+      throw new Error('ইমেইল অথবা পাসওয়ার্ড সঠিক নয়। দয়া করে পুনরায় পরীক্ষা করুন।');
+    }
+    if (code === 'auth/invalid-email') {
+      throw new Error('ইমেইল ঠিকানাটি সঠিক ফরম্যাটে নয়।');
+    }
+    if (code === 'auth/too-many-requests') {
+      throw new Error('অতিরিক্ত ভুল চেষ্টার কারণে একাউন্ট সাময়িকভাবে লক হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।');
+    }
+    throw new Error(err?.message || 'ইমেইল লগইন ব্যর্থ হয়েছে।');
+  }
+};
+
+/**
+ * Sign up with Email and Password
+ */
+export const signUpWithEmail = async (
+  email: string,
+  pass: string,
+  displayName: string
+): Promise<FirebaseUser | null> => {
+  try {
+    const cleanEmail = email.trim();
+    const cleanName = displayName.trim() || 'বাংলা টাইপিস্ট';
+    const cred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
+    if (cred.user) {
+      await updateProfile(cred.user, { displayName: cleanName });
+    }
+    return cred.user;
+  } catch (err: any) {
+    const code = err?.code || '';
+    if (code === 'auth/email-already-in-use') {
+      throw new Error('এই ইমেইল দিয়ে ইতোমধ্যে একটি একাউন্ট তৈরি করা আছে। লগইন করুন।');
+    }
+    if (code === 'auth/weak-password') {
+      throw new Error('পাসওয়ার্ডটি অত্যন্ত দুর্বল। কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।');
+    }
+    if (code === 'auth/invalid-email') {
+      throw new Error('ইমেইল ঠিকানাটি সঠিক ফরম্যাটে নয়।');
+    }
+    throw new Error(err?.message || 'একাউন্ট তৈরি করা যায়নি।');
+  }
+};
+
+/**
+ * Send Password Reset Email
+ */
+export const sendPasswordReset = async (email: string): Promise<void> => {
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+  } catch (err: any) {
+    const code = err?.code || '';
+    if (code === 'auth/user-not-found') {
+      throw new Error('এই ইমেইলে কোনো একাউন্ট খুঁজে পাওয়া যায়নি।');
+    }
+    if (code === 'auth/invalid-email') {
+      throw new Error('ইমেইল ঠিকানাটি সঠিক ফরম্যাটে নয়।');
+    }
+    throw new Error(err?.message || 'পাসওয়ার্ড রিসেট লিংক পাঠানো যায়নি।');
   }
 };
 
@@ -315,6 +396,36 @@ export const fetchUserProfileFromFirestore = async (
     handleFirestoreError(err, OperationType.GET, path);
   }
   return null;
+};
+
+/**
+ * Subscribe to real-time user profile updates from Firestore
+ */
+export const subscribeToUserProfile = (
+  uid: string,
+  onData: (profile: UserProfile | null) => void
+): Unsubscribe => {
+  const path = `users/${uid}`;
+  try {
+    const userRef = doc(db, 'users', uid);
+    return onSnapshot(
+      userRef,
+      (snap) => {
+        if (snap.exists()) {
+          onData(snap.data() as UserProfile);
+        } else {
+          onData(null);
+        }
+      },
+      (err) => {
+        handleFirestoreError(err, OperationType.GET, path);
+        onData(null);
+      }
+    );
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, path);
+    return () => {};
+  }
 };
 
 /**

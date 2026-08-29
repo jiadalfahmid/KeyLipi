@@ -533,7 +533,7 @@ export const LessonPlayer: React.FC = () => {
           </button>
           <div>
             <div className="text-[10px] font-sans font-bold tracking-widest uppercase text-[#1A1A1A]/50">
-              LEVEL {currentLesson.levelNumber} &bull; LESSON {currentLesson.id.replace('lesson-', '')}
+              লেভেল {currentLesson.levelNumber} &bull; লেসন {currentLesson.id.replace('lesson-', '')}
             </div>
             <h1 className="text-2xl sm:text-3xl font-serif-editorial font-bold text-[#1A1A1A] tracking-tight">
               {currentLesson.title}
@@ -554,7 +554,7 @@ export const LessonPlayer: React.FC = () => {
                 : 'bg-[#FFFFFF] border-[#1A1A1A]/15 text-[#1A1A1A]/70 hover:bg-[#F2F0ED]'
             }`}
           >
-            ১. জানা (Learn)
+            ১. জানা
           </button>
           <button
             onClick={() => {
@@ -567,7 +567,7 @@ export const LessonPlayer: React.FC = () => {
                 : 'bg-[#FFFFFF] border-[#1A1A1A]/15 text-[#1A1A1A]/70 hover:bg-[#F2F0ED]'
             }`}
           >
-            ২. অনুশীলন (Practice)
+            ২. অনুশীলন
           </button>
           <button
             onClick={() => {
@@ -580,7 +580,7 @@ export const LessonPlayer: React.FC = () => {
                 : 'bg-[#FFFFFF] border-[#1A1A1A]/15 text-[#1A1A1A]/70 hover:bg-[#F2F0ED]'
             }`}
           >
-            ৩. চ্যালেঞ্জ (Challenge)
+            ৩. চ্যালেঞ্জ
           </button>
         </div>
       </div>
@@ -591,7 +591,7 @@ export const LessonPlayer: React.FC = () => {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-[#1A1A1A]/50 mb-1 block">
-                LESSON BLUEPRINT
+                লেসন বিবরণী
               </span>
               <h2 className="text-2xl font-serif-editorial font-bold text-[#1A1A1A]">
                 {currentLesson.titleEn}
@@ -608,7 +608,7 @@ export const LessonPlayer: React.FC = () => {
 
           <div className="bg-[#EAE8E3]/60 p-4 border border-[#1A1A1A]/10">
             <span className="text-[10px] font-sans font-bold tracking-widest uppercase text-[#1A1A1A]/60 block mb-2">
-              টার্গেট কীসমূহ (TARGET GLYPHS):
+              টার্গেট কীসমূহ:
             </span>
             <div className="flex flex-wrap gap-2">
               {currentLesson.targetKeys.map((k, i) => (
@@ -625,7 +625,7 @@ export const LessonPlayer: React.FC = () => {
           {currentLesson.explanation.tips.length > 0 && (
             <div>
               <h4 className="text-xs font-sans font-bold tracking-wider uppercase text-[#1A1A1A]/60 mb-2">
-                বিশেষ পরামর্শ (PRO TIPS):
+                বিশেষ পরামর্শ:
               </h4>
               <ul className="space-y-1.5 font-bengali text-sm text-[#1A1A1A]/80 list-disc list-inside">
                 {currentLesson.explanation.tips.map((tip, idx) => (
@@ -643,7 +643,7 @@ export const LessonPlayer: React.FC = () => {
               }}
               className="px-6 py-3 bg-[#1A1A1A] text-[#F2F0ED] font-sans text-xs font-bold tracking-widest uppercase hover:bg-black transition-all flex items-center gap-2 shadow-sm cursor-pointer"
             >
-              <span>অনুশীলন শুরু করি (START DRILL)</span>
+              <span>অনুশীলন শুরু করুন</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -659,7 +659,7 @@ export const LessonPlayer: React.FC = () => {
                 মোড:
               </span>
               <span className="font-bold text-[#141210]">
-                {stage === 'practice' ? 'গাইডেড প্র্যাকটিস ড্রিল (Practice)' : 'টাইমড স্পিড চ্যালেঞ্জ (Challenge)'}
+                {stage === 'practice' ? 'গাইডেড প্র্যাকটিস ড্রিল' : 'টাইমড স্পিড চ্যালেঞ্জ'}
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -702,11 +702,11 @@ export const LessonPlayer: React.FC = () => {
             <div className="flex items-center gap-3 flex-wrap">
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-[#FCFBF8] border border-[#141210]/30 rounded font-bold shadow-2xs">Tab ⇥</kbd>
-                <span>রিস্টার্ট (Restart)</span>
+                <span>রিস্টার্ট</span>
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-[#FCFBF8] border border-[#141210]/30 rounded font-bold shadow-2xs">Esc</kbd>
-                <span>বিরতি / রিজিউম (Pause)</span>
+                <span>বিরতি / রিজিউম</span>
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-[#FCFBF8] border border-[#141210]/30 rounded font-bold shadow-2xs">1 - 3</kbd>
@@ -714,7 +714,7 @@ export const LessonPlayer: React.FC = () => {
               </span>
             </div>
             <div className="text-[10px] text-[#141210]/60 italic font-tiro">
-              নিষ্ক্রিয় থাকলে স্বয়ংক্রিয় বিরতি সক্রিয় হবে (Monkeytype Style)
+              টাইপিং বন্ধ থাকলে স্বয়ংক্রিয় বিরতি চালু হবে
             </div>
           </div>
 
@@ -739,10 +739,10 @@ export const LessonPlayer: React.FC = () => {
 
           <div>
             <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-[#8B0000] mb-1 block">
-              LESSON COMPLETED &bull; লেসন সম্পন্ন
+              লেসন সম্পন্ন
             </span>
             <h2 className="text-3xl sm:text-4xl font-tiro font-bold text-[#141210]">
-              দারুণ কাজ! (Splendid Run)
+              দারুণ কাজ!
             </h2>
             <p className="text-sm font-tiro text-[#141210]/75 mt-1">
               আপনি সফলভাবে লেসনটির সমস্ত শর্ত পূরণ করেছেন।
@@ -766,15 +766,15 @@ export const LessonPlayer: React.FC = () => {
           {/* Score Metrics Grid */}
           <div className="grid grid-cols-3 gap-4 w-full bg-[#EDE9DF] p-4 border border-[#141210]/20 text-center font-mono">
             <div>
-              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">NET SPEED</div>
+              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">গতি (WPM)</div>
               <div className="text-2xl font-bold text-[#141210]">{netWpm} WPM</div>
             </div>
             <div className="border-x border-[#141210]/20">
-              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">ACCURACY</div>
+              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">নির্ভুলতা (ACC)</div>
               <div className="text-2xl font-bold text-emerald-800">{accuracy}%</div>
             </div>
             <div>
-              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">XP EARNED</div>
+              <div className="text-[10px] text-[#141210]/60 uppercase font-bold">অর্জিত এক্সপি</div>
               <div className="text-2xl font-bold text-amber-900">+{currentLesson.xpReward} XP</div>
             </div>
           </div>

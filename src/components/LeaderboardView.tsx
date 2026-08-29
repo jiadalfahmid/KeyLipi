@@ -272,16 +272,16 @@ export const LeaderboardView: React.FC = () => {
           <h2 className="text-xl font-tiro font-bold text-[#141210]">
             টাইপিস্টদের পূর্ণাঙ্গ তালিকা
           </h2>
-          <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 border border-emerald-200">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>AUTHENTICATED FIRESTORE SYNC</span>
+          <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 border border-emerald-300 rounded-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span>লাইভ ন্যাশনাল র‍্যাঙ্কিং</span>
           </div>
         </div>
 
         {loading ? (
           <div className="py-12 flex flex-col items-center justify-center gap-3 font-tiro text-[#141210]/70">
             <RefreshCw className="w-6 h-6 animate-spin text-[#8B0000]" />
-            <span>ফায়ারবেস থেকে লাইভ লিডারবোর্ড লোড হচ্ছে...</span>
+            <span>লাইভ লিডারবোর্ড লোড হচ্ছে...</span>
           </div>
         ) : processedUsers.length > 0 ? (
           <div className="overflow-x-auto">
@@ -353,7 +353,7 @@ export const LeaderboardView: React.FC = () => {
                               </span>
                               {isCurrentUser && (
                                 <span className="text-[9px] font-mono font-bold bg-[#8B0000] text-[#F5F2EB] px-1.5 py-0.2">
-                                  আপনি (YOU)
+                                  আপনি
                                 </span>
                               )}
                             </div>

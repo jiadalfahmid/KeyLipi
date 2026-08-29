@@ -31,6 +31,7 @@ import {
 import { NavigationTab, useApp } from '../context/AppContext';
 import { KEYBOARD_LAYOUTS } from '../lib/keyboardAdapters';
 import { KeyboardLayoutId } from '../types';
+import { AuthModal } from './AuthModal';
 
 export const Header: React.FC = () => {
   const {
@@ -53,12 +54,15 @@ export const Header: React.FC = () => {
   } = useApp();
 
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(user.displayName);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isHeaderHovered, setIsHeaderHovered] = useState(false);
 
   const isBn = user.language === 'bn';
-  const isInTypingFocus = (activeTab === 'lesson-player' || activeTab === 'speed-test') && isFocusMode;
+  // Core typing screens where minimal header is default
+  const isPracticeScreen = activeTab === 'lesson-player' || activeTab === 'speed-test';
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -97,10 +101,14 @@ export const Header: React.FC = () => {
     }
   };
 
-  // Sleek Distraction-Free Focus Navigation Bar for Lessons and Tests
-  if (isInTypingFocus) {
+  // Minimal, distraction-free header for practice screens (Lesson Player & Speed Arena)
+  if (isPracticeScreen) {
     return (
-      <header className="border-b-2 border-[#141210] bg-[#FAF7F0] sticky top-0 z-40 select-none shadow-2xs">
+      <header
+        onMouseEnter={() => setIsHeaderHovered(true)}
+        onMouseLeave={() => setIsHeaderHovered(false)}
+        className="border-b-2 border-[#141210] bg-[#FAF7F0] sticky top-0 z-40 select-none shadow-2xs transition-all duration-200"
+      >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Back / Exit with shortcut hint */}
           <div className="flex items-center gap-2">
@@ -121,7 +129,7 @@ export const Header: React.FC = () => {
                 {activeTab === 'lesson-player' ? (
                   <>
                     <Target className="w-3.5 h-3.5 text-[#8B0000]" />
-                    <span>অনুশীলন ও ড্রিল ফোকাস মোড</span>
+                    <span>টাইপিং পাঠশালা</span>
                   </>
                 ) : (
                   <>
@@ -133,11 +141,11 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Essential distraction-free controls */}
+          {/* Right: Essential controls */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Keyboard Layout */}
             <div className="flex items-center gap-1 bg-[#FCFBF8] border border-[#141210]/30 px-2 py-0.5 shadow-2xs rounded-xs">
-              <span className="text-[10px] font-mono text-[#141210]/60 font-bold hidden md:inline">LAYOUT:</span>
+              <span className="text-[10px] font-mono text-[#141210]/60 font-bold hidden md:inline">লেআউট:</span>
               <select
                 value={user.preferredKeyboard}
                 onChange={(e) => setKeyboardLayout(e.target.value as KeyboardLayoutId)}
@@ -173,14 +181,13 @@ export const Header: React.FC = () => {
               {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Expand to Full Broadsheet Header */}
+            {/* Quick Navigation Links on Hover / Toggle */}
             <button
-              onClick={toggleFocusMode}
+              onClick={() => setActiveTab('home')}
               className="flex items-center gap-1 px-2 py-1 bg-[#FCFBF8] border border-[#141210]/30 hover:bg-[#EDE9DF] text-[11px] font-tiro text-[#141210]/80 transition-colors cursor-pointer rounded-xs shadow-2xs"
-              title="সম্পূর্ণ হেডার উন্মুক্ত করুন"
+              title="হোমে ফিরুন"
             >
-              <Eye className="w-3 h-3 text-[#141210]/60" />
-              <span className="hidden md:inline">মেনু</span>
+              <span>হোম</span>
             </button>
           </div>
         </div>
@@ -190,76 +197,68 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="border-b-4 border-double border-[#141210] bg-[#F5F2EB] sticky top-0 z-40 select-none">
-        {/* Broadsheet Top Editorial Info Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-1.5 flex flex-wrap justify-between items-center border-b border-[#141210]/20 text-[11px] font-tiro text-[#141210]/75">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <span className="font-bold tracking-wider text-[#8B0000] border-r border-[#141210]/20 pr-3">
-              KEYLIPI &bull; বাংলা স্পর্শ টাইপিং একাডেমি
-            </span>
-            <span className="hidden sm:inline">বিজয় • অভ্র • জাতীয় কিবোর্ড সমন্বিত</span>
-            <span className="bg-[#141210] text-[#F5F2EB] px-1.5 py-0.2 text-[10px] font-mono uppercase font-bold tracking-wider">
-              ১০-আঙুল মেকানিক্যাল সাউন্ড
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 font-tiro">
-            {/* Cloud Sync Status */}
-            <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#141210]/80">
-              <span className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-amber-500 animate-ping' : 'bg-emerald-600'}`}></span>
-              <span className="font-bold hidden sm:inline">
-                {isSyncing ? 'সিঙ্ক হচ্ছে...' : 'ক্লাউড সিঙ্কড'}
+      <header
+        onMouseEnter={() => setIsHeaderHovered(true)}
+        onMouseLeave={() => setIsHeaderHovered(false)}
+        className="border-b-4 border-double border-[#141210] bg-[#F5F2EB] sticky top-0 z-40 select-none transition-all duration-200"
+      >
+        {/* Top Info Bar (Only on Landing / Overview Home tab) */}
+        {activeTab === 'home' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-1.5 flex flex-wrap justify-between items-center border-b border-[#141210]/15 text-[11px] font-tiro text-[#141210]/75">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="font-bold tracking-wider text-[#8B0000]">
+                KEYLIPI &bull; বাংলা স্পর্শ টাইপিং একাডেমি
               </span>
+              <span className="text-[#141210]/30 hidden sm:inline">&bull;</span>
+              <span className="hidden sm:inline">বিজয় • অভ্র • জাতীয়</span>
             </div>
 
-            <span className="hidden md:inline text-xs italic">
-              "না তাকিয়েই নির্ভুল স্পর্শে বাংলা টাইপিং"
-            </span>
-            <span className="text-[10px] font-mono font-bold uppercase bg-[#EDE9DF] border border-[#141210]/20 px-2 py-0.5 rounded-xs">
-              UNICODE V15
-            </span>
-          </div>
-        </div>
-
-        {/* Grand Editorial Masthead */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row justify-between items-center gap-3 border-b-2 border-[#141210]">
-          {/* Left Daily Streak Badge */}
-          <div className="hidden md:flex flex-col text-left">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#141210]/60">
-              TOUCH TYPING CADENCE
-            </span>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FCFBF8] border border-[#141210]/30 text-xs font-mono font-bold shadow-2xs">
-                <Flame className="w-3.5 h-3.5 text-[#8B0000] fill-[#8B0000]" />
-                <span>{user.streakDays} দিন অবিচল</span>
-              </div>
-              <div className="px-2 py-1 bg-[#EDE9DF] border border-[#141210]/20 text-[10px] font-mono font-bold text-[#141210]">
-                LEVEL {user.level}
+            <div className="flex items-center gap-3 font-tiro">
+              {/* Cloud Sync Status Indicator */}
+              <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#141210]/80" title="ক্লাউড ব্যাকআপ সক্রিয়">
+                <span className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-amber-500 animate-ping' : 'bg-emerald-600'}`}></span>
+                <span className="font-bold hidden sm:inline">
+                  {isSyncing ? 'সিঙ্ক হচ্ছে...' : 'ক্লাউড সিঙ্ক চালু'}
+                </span>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Center Grand Masthead Title */}
+        {/* Clean Masthead */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-3 border-b-2 border-[#141210]">
+          {/* Left: Streak Status */}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FCFBF8] border border-[#141210]/30 text-xs font-mono font-bold shadow-2xs">
+              <Flame className="w-3.5 h-3.5 text-[#8B0000] fill-[#8B0000]" />
+              <span>{user.streakDays} দিন স্ট্রিক</span>
+            </div>
+            <div className="px-2 py-1 bg-[#EDE9DF] border border-[#141210]/20 text-[10px] font-mono font-bold text-[#141210]">
+              LEVEL {user.level}
+            </div>
+          </div>
+
+          {/* Center Title */}
           <div
             onClick={() => setActiveTab('home')}
             className="flex flex-col items-center cursor-pointer group text-center"
           >
             <div className="flex items-center gap-3">
-              <span className="font-serif-editorial text-4xl sm:text-5xl font-bold tracking-tight text-[#141210] group-hover:text-[#8B0000] transition-colors">
+              <span className="font-serif-editorial text-3xl sm:text-4xl font-bold tracking-tight text-[#141210] group-hover:text-[#8B0000] transition-colors">
                 কীলিপি &bull; KeyLipi
               </span>
             </div>
-            <span className="text-[11px] sm:text-xs font-serif-editorial italic tracking-wide text-[#141210]/75 mt-0.5">
-              THE EDITORIAL BANGLA TOUCH TYPING ACADEMY & SPEED ARENA
+            <span className="text-[10px] sm:text-[11px] font-serif-editorial italic tracking-wide text-[#141210]/70">
+              বাংলা টাচ টাইপিং একাডেমি ও স্পিড অ্যারেনা
             </span>
           </div>
 
-          {/* Right Tools & Auth Controls */}
+          {/* Right: Layout Selector, Sound, Language & Account */}
           <div className="flex items-center gap-2 flex-wrap justify-center">
-            {/* Keyboard Layout Selector */}
+            {/* Keyboard Layout Selector (Single Unified Place) */}
             <div className="flex items-center gap-1.5 bg-[#FCFBF8] border border-[#141210]/30 px-2.5 py-1 shadow-2xs">
               <span className="text-[10px] font-mono font-bold text-[#141210]/60 hidden sm:inline">
-                LAYOUT:
+                লেআউট:
               </span>
               <select
                 value={user.preferredKeyboard}
@@ -268,7 +267,7 @@ export const Header: React.FC = () => {
               >
                 {Object.values(KEYBOARD_LAYOUTS).map((lay) => (
                   <option key={lay.id} value={lay.id} className="text-[#141210]">
-                    {lay.nativeName} ({lay.name})
+                    {lay.nativeName}
                   </option>
                 ))}
               </select>
@@ -320,18 +319,18 @@ export const Header: React.FC = () => {
               </button>
             ) : (
               <button
-                onClick={loginGoogle}
+                onClick={() => setShowAuthModal(true)}
                 className="flex items-center gap-1.5 bg-[#8B0000] text-[#F5F2EB] border-2 border-[#141210] px-3 py-1 text-xs font-tiro font-bold hover:bg-[#141210] transition-colors cursor-pointer shadow-2xs"
-                title="গুগল দিয়ে লগইন করে প্রগ্রেস সেভ করুন"
+                title="লগইন করে প্রগ্রেস সেভ করুন"
               >
                 <LogIn className="w-3.5 h-3.5" />
-                <span>লগইন করুন</span>
+                <span>লগইন</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Broadsheet Section Navigation Bar */}
+        {/* Section Navigation Tabs */}
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto py-1.5 text-xs font-tiro font-bold">
           {navItems.map((item, index) => {
             const Icon = item.icon;
@@ -456,11 +455,11 @@ export const Header: React.FC = () => {
             {/* Cloud Status Info */}
             <div className="bg-[#EDE9DF]/60 p-3.5 border border-[#141210]/20 text-xs font-tiro space-y-1.5">
               <div className="flex items-center justify-between text-[#141210]">
-                <span className="font-bold">ক্লাউড প্রগ্রেস সিঙ্ক:</span>
-                <span className="font-mono text-[#141210] font-bold bg-[#141210]/10 px-2 py-0.5 rounded-xs">সক্রিয় (Firestore Connected)</span>
+                <span className="font-bold">ক্লাউড প্রগ্রেস ব্যাকআপ:</span>
+                <span className="font-mono text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded-xs border border-emerald-300">সক্রিয় (Cloud Sync: On)</span>
               </div>
               <p className="text-[11px] text-[#141210]/70 leading-relaxed">
-                আপনার সমস্ত লেসন প্রগ্রেস, স্পিড টেস্ট স্কোর, যুক্তাক্ষর মাস্টারি, স্ট্রিক এবং অর্জিত সনদপত্র স্বয়ংক্রিয়ভাবে ফায়ারবেস ক্লাউডে সংরক্ষিত হচ্ছে।
+                আপনার সমস্ত লেসন প্রগ্রেস, স্পিড টেস্ট স্কোর, যুক্তাক্ষর মাস্টারি, স্ট্রিক এবং অর্জিত সনদপত্র স্বয়ংক্রিয়ভাবে নিরাপদ ক্লাউডে সংরক্ষিত হচ্ছে।
               </p>
             </div>
 
@@ -490,6 +489,9 @@ export const Header: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Authentication & Registration Modal */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </>
   );
 };

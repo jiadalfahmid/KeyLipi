@@ -35,6 +35,7 @@ import { ACHIEVEMENTS_LIST } from '../data/achievements';
 import { CERTIFICATION_LEVELS } from '../data/certifications';
 import { JUKTAKKHOR_DATABASE } from '../data/juktakkhorData';
 import { checkUsernameAvailability } from '../lib/firebase';
+import { AuthModal } from './AuthModal';
 
 const PRESET_AVATARS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
@@ -49,6 +50,7 @@ export const Dashboard: React.FC = () => {
 
   // Profile Edit State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [displayNameInput, setDisplayNameInput] = useState(user.displayName);
   const [usernameInput, setUsernameInput] = useState(user.username || '');
   const [photoUrlInput, setPhotoUrlInput] = useState(user.photoURL || '');
@@ -143,11 +145,11 @@ export const Dashboard: React.FC = () => {
           </div>
 
           <button
-            onClick={loginGoogle}
+            onClick={() => setShowAuthModal(true)}
             className="px-5 py-2 bg-[#8B0000] text-[#F5F2EB] font-tiro font-bold text-xs hover:bg-[#141210] transition-colors cursor-pointer shadow-2xs flex items-center gap-2 shrink-0"
           >
             <LogIn className="w-4 h-4" />
-            <span>গুগল দিয়ে লগইন</span>
+            <span>লগইন / নিবন্ধন</span>
           </button>
         </div>
       )}
@@ -634,6 +636,8 @@ export const Dashboard: React.FC = () => {
           })}
         </div>
       </div>
+
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

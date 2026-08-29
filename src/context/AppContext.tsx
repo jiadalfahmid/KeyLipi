@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { ACHIEVEMENTS_LIST } from '../data/achievements';
 import { isModuleCompleted } from '../data/curriculum';
@@ -14,9 +14,13 @@ import {
   auth,
   ensureAuth,
   signInWithGoogle,
+  signInWithEmail,
+  signUpWithEmail,
+  sendPasswordReset,
   signOutUser,
   syncUserProfileToFirestore,
   fetchUserProfileFromFirestore,
+  subscribeToUserProfile,
   publishSessionToFirestore,
   updateUserProfileData,
   checkUsernameAvailability,
@@ -40,6 +44,9 @@ interface AppContextType {
   isSyncing: boolean;
   authError: string | null;
   loginGoogle: () => Promise<void>;
+  loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  signUpWithEmailPassword: (email: string, pass: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  sendPasswordResetEmailLink: (email: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfileName: (name: string) => Promise<void>;
   updateUserProfile: (data: {
@@ -71,6 +78,58 @@ interface AppContextType {
 }
 
 const STORAGE_KEY = 'keylipi_user_profile_v1';
+const TAB_STORAGE_KEY = 'keylipi_active_tab';
+const LESSON_STORAGE_KEY = 'keylipi_active_lesson_id';
+
+const VALID_TABS: Record<string, NavigationTab> = {
+  home: 'home',
+  learn: 'learn',
+  lessons: 'learn',
+  'lesson-player': 'lesson-player',
+  lesson: 'lesson-player',
+  'speed-test': 'speed-test',
+  speedtest: 'speed-test',
+  'juktakkhor-lab': 'juktakkhor-lab',
+  juktakkhor: 'juktakkhor-lab',
+  games: 'games',
+  dashboard: 'dashboard',
+  profile: 'dashboard',
+  leaderboard: 'leaderboard'
+};
+
+const getInitialTab = (): NavigationTab => {
+  try {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+      if (hash && VALID_TABS[hash]) {
+        return VALID_TABS[hash];
+      }
+    }
+    if (typeof localStorage !== 'undefined') {
+      const savedTab = localStorage.getItem(TAB_STORAGE_KEY);
+      if (savedTab && VALID_TABS[savedTab]) {
+        return VALID_TABS[savedTab];
+      }
+    }
+  } catch {
+    // Ignore
+  }
+  return 'home';
+};
+
+const getInitialLessonId = (): string => {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const savedLesson = localStorage.getItem(LESSON_STORAGE_KEY);
+      if (savedLesson) {
+        return savedLesson;
+      }
+    }
+  } catch {
+    // Ignore
+  }
+  return 'lesson-1-1';
+};
 
 const sanitizeSessions = (sessions: PracticeSessionRecord[] = []): PracticeSessionRecord[] => {
   const seen = new Set<string>();
@@ -166,8 +225,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return INITIAL_USER;
   });
 
-  const [activeTab, setActiveTab] = useState<NavigationTab>('home');
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>('lesson-1-1');
+  const [activeTab, setActiveTab] = useState<NavigationTab>(getInitialTab);
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(getInitialLessonId);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [isFocusMode, setIsFocusMode] = useState<boolean>(true);
 
@@ -177,71 +236,157 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isModule1Done = isModuleCompleted('module-1', user.completedLessons || []);
 
-  // Validate connection & subscribe to Firebase Auth state changes
+  // Validate connection & load cloud state on login (Local-First Merge)
   useEffect(() => {
     testConnection();
 
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setIsAuthLoading(true);
+    const authUnsub = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         setAuthUser(fbUser);
+        setIsAuthLoading(true);
+
         try {
+          // One-time fetch on login to merge cloud progress with local progress
           const cloudProfile = await fetchUserProfileFromFirestore(fbUser.uid);
           if (cloudProfile) {
-            setUser((prev) => ({
-              ...prev,
-              ...cloudProfile,
-              uid: fbUser.uid,
-              email: fbUser.email || cloudProfile.email,
-              photoURL: fbUser.photoURL || cloudProfile.photoURL || prev.photoURL,
-              username: cloudProfile.username || prev.username,
-              displayName: cloudProfile.displayName || fbUser.displayName || prev.displayName,
-              recentSessions: sanitizeSessions(cloudProfile.recentSessions || prev.recentSessions)
-            }));
+            setUser((prev) => {
+              const cloudLessons = cloudProfile.completedLessons || [];
+              const localLessons = prev.completedLessons || [];
+              const mergedLessons = Array.from(new Set([...cloudLessons, ...localLessons]));
+
+              // Merged stars (highest score wins)
+              const mergedStars = { ...(prev.lessonStars || {}), ...(cloudProfile.lessonStars || {}) };
+              Object.keys(prev.lessonStars || {}).forEach((k) => {
+                if (cloudProfile.lessonStars?.[k]) {
+                  mergedStars[k] = Math.max(prev.lessonStars[k], cloudProfile.lessonStars[k]);
+                }
+              });
+
+              // Merged achievements
+              const mergedAchievements = Array.from(
+                new Set([...(cloudProfile.unlockedAchievements || []), ...(prev.unlockedAchievements || [])])
+              );
+
+              // Merged recent sessions (deduplicated by ID, latest first)
+              const existingIds = new Set<string>();
+              const combinedSessions = [...(cloudProfile.recentSessions || []), ...(prev.recentSessions || [])]
+                .filter((s) => {
+                  if (!s.id || existingIds.has(s.id)) return false;
+                  existingIds.add(s.id);
+                  return true;
+                })
+                .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+                .slice(0, 30);
+
+              const mergedUser: UserProfile = {
+                ...prev,
+                ...cloudProfile,
+                uid: fbUser.uid,
+                email: fbUser.email || cloudProfile.email || prev.email,
+                photoURL: fbUser.photoURL || cloudProfile.photoURL || prev.photoURL,
+                username: cloudProfile.username || prev.username,
+                displayName: cloudProfile.displayName || fbUser.displayName || prev.displayName,
+                completedLessons: mergedLessons,
+                lessonStars: mergedStars,
+                unlockedAchievements: mergedAchievements,
+                totalXp: Math.max(cloudProfile.totalXp || 0, prev.totalXp || 0),
+                level: Math.max(cloudProfile.level || 1, prev.level || 1),
+                streakDays: Math.max(cloudProfile.streakDays || 1, prev.streakDays || 1),
+                weakKeys: { ...(cloudProfile.weakKeys || {}), ...(prev.weakKeys || {}) },
+                juktakkhorMastery: { ...(cloudProfile.juktakkhorMastery || {}), ...(prev.juktakkhorMastery || {}) },
+                earnedCertificates: { ...(cloudProfile.earnedCertificates || {}), ...(prev.earnedCertificates || {}) },
+                recentSessions: sanitizeSessions(combinedSessions)
+              };
+
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedUser));
+              } catch {
+                // Ignore
+              }
+
+              // Update cloud once with merged union if local had newer offline items
+              syncUserProfileToFirestore(fbUser.uid, mergedUser).catch(() => {});
+              return mergedUser;
+            });
           } else {
-            // First time login for this user - populate cloud from current state
-            const initialCloud: UserProfile = {
-              ...user,
-              uid: fbUser.uid,
-              email: fbUser.email || undefined,
-              photoURL: fbUser.photoURL || user.photoURL || undefined,
-              displayName: fbUser.displayName || user.displayName
-            };
-            setUser(initialCloud);
-            await syncUserProfileToFirestore(fbUser.uid, initialCloud);
+            // First time login - save existing local progress to cloud
+            setUser((prev) => {
+              const initialCloud: UserProfile = {
+                ...prev,
+                uid: fbUser.uid,
+                email: fbUser.email || undefined,
+                photoURL: fbUser.photoURL || prev.photoURL || undefined,
+                displayName: fbUser.displayName || prev.displayName
+              };
+              syncUserProfileToFirestore(fbUser.uid, initialCloud).catch(() => {});
+              return initialCloud;
+            });
           }
         } catch (err) {
           console.warn('Profile load notice:', err);
+        } finally {
+          setIsAuthLoading(false);
         }
       } else {
         setAuthUser(null);
+        setIsAuthLoading(false);
         // Ensure anonymous session for guest typing
         ensureAuth().catch(() => {});
       }
-      setIsAuthLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      authUnsub();
+    };
   }, []);
 
-  // Save to LocalStorage and Auto-Sync to Firestore
+  // Local-First: Save instantly to LocalStorage on any change (0 network lag)
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     } catch {
       // Ignore
     }
+  }, [user]);
 
-    if (authUser?.uid) {
-      setIsSyncing(true);
-      const timer = setTimeout(() => {
-        syncUserProfileToFirestore(authUser.uid, user)
-          .catch(() => {})
-          .finally(() => setIsSyncing(false));
-      }, 600);
-      return () => clearTimeout(timer);
+  // Persist active tab to LocalStorage and keep URL hash in sync for reload/bookmarking
+  useEffect(() => {
+    try {
+      localStorage.setItem(TAB_STORAGE_KEY, activeTab);
+      const targetHash = `#${activeTab}`;
+      if (typeof window !== 'undefined' && window.location.hash !== targetHash) {
+        window.history.replaceState(null, '', targetHash);
+      }
+    } catch {
+      // Ignore
     }
-  }, [user, authUser?.uid]);
+  }, [activeTab]);
+
+  // Persist selected lesson ID to LocalStorage so resuming on reload stays on the exact lesson
+  useEffect(() => {
+    if (selectedLessonId) {
+      try {
+        localStorage.setItem(LESSON_STORAGE_KEY, selectedLessonId);
+      } catch {
+        // Ignore
+      }
+    }
+  }, [selectedLessonId]);
+
+  // Listen to browser Back/Forward navigation (hashchange)
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+        if (hash && VALID_TABS[hash]) {
+          setActiveTab((prev) => (prev === VALID_TABS[hash] ? prev : VALID_TABS[hash]));
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Sync sound settings to audio synth
   useEffect(() => {
@@ -267,6 +412,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       setAuthError(err?.message || 'লগইন ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+    }
+  };
+
+  const loginWithEmail = async (
+    email: string,
+    pass: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    setAuthError(null);
+    try {
+      const loggedIn = await signInWithEmail(email, pass);
+      if (loggedIn) {
+        setAuthUser(loggedIn);
+        soundFx.playSuccessFanfare();
+        return { success: true };
+      }
+      return { success: false, error: 'লগইন সম্পন্ন করা যায়নি।' };
+    } catch (err: any) {
+      const msg = err?.message || 'ইমেইল লগইন ব্যর্থ হয়েছে।';
+      setAuthError(msg);
+      return { success: false, error: msg };
+    }
+  };
+
+  const signUpWithEmailPassword = async (
+    email: string,
+    pass: string,
+    name: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    setAuthError(null);
+    try {
+      const newUser = await signUpWithEmail(email, pass, name);
+      if (newUser) {
+        setAuthUser(newUser);
+        soundFx.playSuccessFanfare();
+        return { success: true };
+      }
+      return { success: false, error: 'একাউন্ট তৈরি করা যায়নি।' };
+    } catch (err: any) {
+      const msg = err?.message || 'একাউন্ট তৈরি করতে সমস্যা হয়েছে।';
+      setAuthError(msg);
+      return { success: false, error: msg };
+    }
+  };
+
+  const sendPasswordResetEmailLink = async (
+    email: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    setAuthError(null);
+    try {
+      await sendPasswordReset(email);
+      return { success: true };
+    } catch (err: any) {
+      const msg = err?.message || 'পাসওয়ার্ড রিসেট লিংক পাঠানো যায়নি।';
+      setAuthError(msg);
+      return { success: false, error: msg };
     }
   };
 
@@ -448,6 +648,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setUser(updatedUser);
 
+    // Immediately push to cloud
+    if (authUser?.uid) {
+      syncUserProfileToFirestore(authUser.uid, updatedUser).catch(() => {});
+    }
+
     // Publish to cloud leaderboard & sessions collection
     publishSessionToFirestore(newRecord, updatedUser).catch(() => {});
   };
@@ -470,23 +675,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateJuktakkhorMastery = (glyph: string, score: JuktakkhorMasteryScore) => {
-    setUser((prev) => ({
-      ...prev,
-      juktakkhorMastery: {
-        ...(prev.juktakkhorMastery || {}),
-        [glyph]: score
+    setUser((prev) => {
+      const updatedUser = {
+        ...prev,
+        juktakkhorMastery: {
+          ...(prev.juktakkhorMastery || {}),
+          [glyph]: score
+        }
+      };
+      if (authUser?.uid) {
+        syncUserProfileToFirestore(authUser.uid, updatedUser).catch(() => {});
       }
-    }));
+      return updatedUser;
+    });
   };
 
   const claimCertificate = (tier: CertificationTier, wpm: number, accuracy: number) => {
     const certNumber = `KL-${tier.toUpperCase().slice(0, 3)}-${Math.floor(1000 + Math.random() * 9000)}`;
     const today = new Date().toISOString().split('T')[0];
 
-    setUser((prev) => ({
-      ...prev,
+    const updatedUser: UserProfile = {
+      ...user,
       earnedCertificates: {
-        ...(prev.earnedCertificates || {}),
+        ...(user.earnedCertificates || {}),
         [tier]: {
           earnedDate: today,
           wpm,
@@ -494,7 +705,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           certificateNumber: certNumber
         }
       }
-    }));
+    };
+
+    setUser(updatedUser);
+
+    if (authUser?.uid) {
+      syncUserProfileToFirestore(authUser.uid, updatedUser).catch(() => {});
+    }
 
     soundFx.playSuccessFanfare();
   };
@@ -528,6 +745,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isSyncing,
         authError,
         loginGoogle,
+        loginWithEmail,
+        signUpWithEmailPassword,
+        sendPasswordResetEmailLink,
         logout,
         updateProfileName,
         updateUserProfile,

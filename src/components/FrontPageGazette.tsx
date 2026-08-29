@@ -147,16 +147,16 @@ export const FrontPageGazette: React.FC = () => {
       {/* Editorial Lead Section (Broadsheet Grid) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border-b-2 border-[#141210] pb-8">
         
-        {/* Left 8 Cols: Main Editorial Lead Story */}
-        <article className="lg:col-span-8 flex flex-col gap-5 lg:border-r lg:border-[#141210]/20 lg:pr-8">
+        {/* Left 8 Cols: Main Interactive Lead & Editorial Story */}
+        <article className="lg:col-span-8 flex flex-col gap-6 lg:border-r lg:border-[#141210]/20 lg:pr-8">
           
           {/* Section Kicker */}
           <div className="flex items-center justify-between border-b border-[#141210]/15 pb-1 text-xs font-tiro text-[#8B0000] font-bold">
             <div className="flex items-center gap-2">
               <span className="bg-[#8B0000] text-[#F5F2EB] px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider">
-                EDITORIAL MASTERCLASS
+                সম্পাদকীয় কলম
               </span>
-              <span>বাংলা স্পর্শ টাইপিং একাডেমি • কীলিপি খতিয়ান</span>
+              <span>বাংলা স্পর্শ টাইপিং একাডেমি &bull; কীলিপি খতিয়ান</span>
             </div>
             <span className="text-[#141210]/60 font-mono text-[11px]">দশ আঙুলের বিজ্ঞান</span>
           </div>
@@ -171,40 +171,14 @@ export const FrontPageGazette: React.FC = () => {
             হোম-রো (ASDF JKL;) পদ্ধতির বৈজ্ঞানিক চর্চা, ১০-টোন মেকানিক্যাল অডিও ও যুক্তাক্ষরের নির্ভুল হসন্ত বিন্যাসে মিনিটে ৬০+ শব্দ টাইপের বিশ্বস্ত প্ল্যাটফর্ম।
           </p>
 
-          {/* Two-Column Editorial Body */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[#141210]/90 font-tiro text-[15px] leading-[1.8] text-justify">
-            <div>
-              <p className="drop-cap">
-                বাংলা ভাষায় টাইপিং কেবল কোনো যান্ত্রিক কাজ নয়; এটি ভাষা ও চিন্তার সরাসরি প্রকাশ। যারা কিবোর্ডের দিকে তাকিয়ে দু-এক আঙুলে অক্ষর খোঁজেন, তাদের মস্তিষ্কের মনোযোগ বর্ণমালায় আটকে থাকে। পক্ষান্তরে, স্পর্শ টাইপিংয়ে (Touch Typing) মস্তিষ্ক সরাসরি শব্দ ভাবেন আর ১০টি আঙুল অবচেতন স্মৃতিতে সঠিক কী-তে আঘাত হানে।
-              </p>
-              <p className="mt-3">
-                কীলিপি প্ল্যাটফর্মে আমরা এনেছি প্রতিটি আঙুলের জন্য পৃথক অডিও ফিডব্যাক, স্বচ্চ ফিঙ্গার নিশানা এবং বিজয়, অভ্র ও জাতীয় কিবোর্ডের সমন্বিত রিয়েল-টাইম টাইপিং সিমুলেটর।
-              </p>
-            </div>
-
-            <div>
-              <p>
-                বিশেষ করে বাংলা যুক্তাক্ষর যেমন ক+্+ষ=ক্ষ, জ+্+ঞ=জ্ঞ, ত+্+র=ত্র কিংবা ষ্+ণ=ষ্ণ লেখার ক্ষেত্রে সঠিক হসন্ত নিয়ম জানা থাকলে কোনো ভুল ছাড়াই দ্রুত গতি তোলা সম্ভব।
-              </p>
-              <div className="mt-4 p-3.5 bg-[#EDE9DF] border border-[#141210]/20 rounded-xs">
-                <span className="text-[11px] font-mono font-bold uppercase text-[#8B0000] block mb-1">
-                  কীলিপির মূলনীতি:
-                </span>
-                <span className="text-xs italic text-[#141210]">
-                  "কখনও নিচের দিকে তাকাবেন না। ভুল হলেও আঙুলের স্মৃতিকে বিশ্বাস করুন; গতি নিজে থেকেই বৃদ্ধি পাবে।"
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive Live Broadsheet Typing Sandbox */}
-          <div className="mt-3 bg-[#FCFBF8] border-2 border-[#141210]/40 p-5 sm:p-6 shadow-2xs">
+          {/* Interactive Live Broadsheet Typing Sandbox (Leading Section) */}
+          <div className="bg-[#FCFBF8] border-2 border-[#141210]/40 p-5 sm:p-6 shadow-2xs">
             {/* Box Header & Prompt Tabs */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#141210]/15 pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-700" />
                 <span className="text-xs font-tiro font-bold text-[#141210] uppercase tracking-wider">
-                  তাত্ক্ষণিক টাইপিং ড্রিল (Instant Live Practice)
+                  তাত্ক্ষণিক টাইপিং মহড়া (সরাসরি অনুশীলন করুন)
                 </span>
               </div>
 
@@ -324,6 +298,32 @@ export const FrontPageGazette: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Two-Column Editorial Body (Essay Follows Demo) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[#141210]/90 font-tiro text-[15px] leading-[1.8] text-justify pt-2">
+            <div>
+              <p className="drop-cap">
+                বাংলা ভাষায় টাইপিং কেবল কোনো যান্ত্রিক কাজ নয়; এটি ভাষা ও চিন্তার সরাসরি প্রকাশ। যারা কিবোর্ডের দিকে তাকিয়ে দু-এক আঙুলে অক্ষর খোঁজেন, তাদের মস্তিষ্কের মনোযোগ বর্ণমালায় আটকে থাকে। পক্ষান্তরে, স্পর্শ টাইপিংয়ে (Touch Typing) মস্তিষ্ক সরাসরি শব্দ ভাবেন আর ১০টি আঙুল অবচেতন স্মৃতিতে সঠিক কী-তে আঘাত হানে।
+              </p>
+              <p className="mt-3">
+                কীলিপি প্ল্যাটফর্মে আমরা এনেছি প্রতিটি আঙুলের জন্য পৃথক অডিও ফিডব্যাক, স্পষ্ট ফিঙ্গার নিশানা এবং বিজয়, অভ্র ও জাতীয় কিবোর্ডের সমন্বিত রিয়েল-টাইম টাইপিং সিমুলেটর।
+              </p>
+            </div>
+
+            <div>
+              <p>
+                বিশেষ করে বাংলা যুক্তাক্ষর যেমন ক+্+ষ=ক্ষ, জ+্+ঞ=জ্ঞ, ত+্+র=ত্র কিংবা ষ্+ণ=ষ্ণ লেখার ক্ষেত্রে সঠিক হসন্ত নিয়ম জানা থাকলে কোনো ভুল ছাড়াই দ্রুত গতি তোলা সম্ভব।
+              </p>
+              <div className="mt-4 p-3.5 bg-[#EDE9DF] border border-[#141210]/20 rounded-xs">
+                <span className="text-[11px] font-mono font-bold uppercase text-[#8B0000] block mb-1">
+                  কীলিপির মূলনীতি:
+                </span>
+                <span className="text-xs italic text-[#141210]">
+                  "কখনও নিচের দিকে তাকাবেন না। ভুল হলেও আঙুলের স্মৃতিকে বিশ্বাস করুন; গতি নিজে থেকেই বৃদ্ধি পাবে।"
+                </span>
+              </div>
+            </div>
+          </div>
         </article>
 
         {/* Right 4 Cols: Editorial Side Columns */}
@@ -335,7 +335,7 @@ export const FrontPageGazette: React.FC = () => {
               <span className="text-xs font-tiro font-bold text-[#8B0000] uppercase tracking-wider">
                 কীলিপি একাডেমি মডিউল
               </span>
-              <span className="text-[10px] font-mono text-[#141210]/60">PATHWAYS</span>
+              <span className="text-[10px] font-mono text-[#141210]/60">পাঠক্রম</span>
             </div>
 
             <div className="space-y-3 font-tiro text-xs text-[#141210]">
@@ -444,7 +444,7 @@ export const FrontPageGazette: React.FC = () => {
           {/* Quick CTA Card */}
           <div className="bg-[#141210] text-[#F5F2EB] p-5 shadow-xs flex flex-col gap-3 rounded-xs">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F2EB]/60">
-              KEY LIPI ACADEMY
+              কীলিপি পাঠশালা
             </span>
             <h3 className="font-tiro font-bold text-xl leading-tight">
               প্রথম ধাপ থেকেই টাইপিং শুরু করতে চান?
@@ -473,7 +473,7 @@ export const FrontPageGazette: React.FC = () => {
             </h2>
           </div>
           <span className="text-[10px] font-mono uppercase text-[#141210]/60 font-bold">
-            FOUNDATIONAL PILLARS
+            ৪টি মূল স্তম্ভ
           </span>
         </div>
 
@@ -482,7 +482,7 @@ export const FrontPageGazette: React.FC = () => {
           <div className="bg-[#FCFBF8] border-2 border-[#141210]/30 p-4 shadow-2xs flex flex-col gap-2 rounded-xs">
             <div className="flex items-center gap-1.5 text-[#8B0000] text-xs font-mono font-bold">
               <span>০১.</span>
-              <span className="uppercase">HOME ROW ANATOMY</span>
+              <span className="uppercase">হোম-রো বিন্যাস</span>
             </div>
             <h3 className="font-tiro font-bold text-base text-[#141210]">
               হোম-রো ও দশ আঙুলের স্থাপন
@@ -496,7 +496,7 @@ export const FrontPageGazette: React.FC = () => {
           <div className="bg-[#FCFBF8] border-2 border-[#141210]/30 p-4 shadow-2xs flex flex-col gap-2 rounded-xs">
             <div className="flex items-center gap-1.5 text-[#8B0000] text-xs font-mono font-bold">
               <span>০২.</span>
-              <span className="uppercase">10-TONE ACOUSTICS</span>
+              <span className="uppercase">১০-টোন ধ্বনিতত্ত্ব</span>
             </div>
             <h3 className="font-tiro font-bold text-base text-[#141210]">
               আঙুলভিত্তিক মেকানিক্যাল অডিও
@@ -510,7 +510,7 @@ export const FrontPageGazette: React.FC = () => {
           <div className="bg-[#FCFBF8] border-2 border-[#141210]/30 p-4 shadow-2xs flex flex-col gap-2 rounded-xs">
             <div className="flex items-center gap-1.5 text-[#8B0000] text-xs font-mono font-bold">
               <span>০৩.</span>
-              <span className="uppercase">JUKTAKKHOR LAB</span>
+              <span className="uppercase">যুক্তবর্ণ ল্যাব</span>
             </div>
             <h3 className="font-tiro font-bold text-base text-[#141210]">
               যুক্তাক্ষর ব্যবচ্ছেদ ও হসন্ত
@@ -524,13 +524,13 @@ export const FrontPageGazette: React.FC = () => {
           <div className="bg-[#FCFBF8] border-2 border-[#141210]/30 p-4 shadow-2xs flex flex-col gap-2 rounded-xs">
             <div className="flex items-center gap-1.5 text-[#8B0000] text-xs font-mono font-bold">
               <span>০৪.</span>
-              <span className="uppercase">MULTI-LAYOUT</span>
+              <span className="uppercase">বহু-লেআউট সমন্বয়</span>
             </div>
             <h3 className="font-tiro font-bold text-base text-[#141210]">
               বিজয়, অভ্র ও জাতীয় সমন্বয়
             </h3>
             <p className="font-tiro text-xs text-[#141210]/75 leading-relaxed">
-              এক ক্লিকেই পছন্দমতো কীবোর্ড লেআউট পরিবর্তন করে ইউনিকোড ভি১৫ মানে যেকোনো সিস্টেমে দক্ষ টাইপিস্ট হওয়ার সুবিধা।
+              এক ক্লিকেই পছন্দমতো কীবোর্ড লেআউট পরিবর্তন করে ইউনিকোড মানে যেকোনো সিস্টেমে দক্ষ টাইপিস্ট হওয়ার সুবিধা।
             </p>
           </div>
         </div>
@@ -541,7 +541,7 @@ export const FrontPageGazette: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between border-b border-[#141210]/20 pb-3 gap-2">
           <div>
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8B0000] block mb-0.5">
-              LAYOUT CROSS-REFERENCE
+              লেআউট তুলনামূলক ছক
             </span>
             <h3 className="font-tiro font-bold text-xl text-[#141210]">
               কীবোর্ড লেআউট তুলনামূলক চার্ট
@@ -550,7 +550,7 @@ export const FrontPageGazette: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setKeyboardLayout('bijoy')}
-              className={`px-2.5 py-1 text-xs font-tiro font-bold rounded-xs ${
+              className={`px-2.5 py-1 text-xs font-tiro font-bold rounded-xs cursor-pointer ${
                 user.preferredKeyboard === 'bijoy' ? 'bg-[#141210] text-[#F5F2EB]' : 'bg-[#EDE9DF]'
               }`}
             >
@@ -558,7 +558,7 @@ export const FrontPageGazette: React.FC = () => {
             </button>
             <button
               onClick={() => setKeyboardLayout('avro')}
-              className={`px-2.5 py-1 text-xs font-tiro font-bold rounded-xs ${
+              className={`px-2.5 py-1 text-xs font-tiro font-bold rounded-xs cursor-pointer ${
                 user.preferredKeyboard === 'avro' ? 'bg-[#141210] text-[#F5F2EB]' : 'bg-[#EDE9DF]'
               }`}
             >
@@ -566,7 +566,7 @@ export const FrontPageGazette: React.FC = () => {
             </button>
             <button
               onClick={() => setKeyboardLayout('jatiya')}
-              className={`px-2.5 py-1 text-xs font-tiro font-bold rounded-xs ${
+              className={`px-2.5 py-1 text-xs font-tiro font-bold rounded-xs cursor-pointer ${
                 user.preferredKeyboard === 'jatiya' ? 'bg-[#141210] text-[#F5F2EB]' : 'bg-[#EDE9DF]'
               }`}
             >
